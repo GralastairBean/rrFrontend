@@ -7,25 +7,26 @@ RUN apt-get update && apt-get install -y \
     watchman \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Expo CLI globally
-RUN npm install -g expo-cli
-
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Install Expo CLI globally
+RUN npm install -g expo-cli create-expo-app
+
+# Create a new Expo project
+RUN npx create-expo-app@latest . --template blank --no-install
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application
-COPY . .
-
-# Expose the default Expo development server port
+# Expose Expo ports
+EXPOSE 8081
 EXPOSE 19000
 EXPOSE 19001
 EXPOSE 19002
 
+# Set the host IP for Expo
+ENV REACT_NATIVE_PACKAGER_HOSTNAME="192.168.0.13"
+
 # Start the Expo development server
-CMD ["npm", "start"] 
+CMD ["npx", "expo", "start", "--lan"] 
