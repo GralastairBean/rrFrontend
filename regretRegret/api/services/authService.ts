@@ -8,30 +8,41 @@ const USERNAME_KEY = '@auth_username';
 
 export const authService = {
   async register(username: string): Promise<void> {
-    // Register the user (data will be automatically converted to form data)
-    await publicApi.post<User>('/auth/user/', {
+    // Register the user and get tokens in the response
+    const response = await publicApi.post<User>('/auth/user/', {
       username: username.trim()
     });
     
-    // Generate a random password for token acquisition
-    const password = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-    
-    // Get tokens (data will be automatically converted to form data)
-    const response = await publicApi.post<TokenObtainPairResponse>('/auth/jwt/create/', {
-      username: username.trim(),
-      password
-    });
+    if (!response.data?.tokens) {
+      throw new Error('No tokens received from registration');
+    }
+
+    const { tokens } = response.data;
+    if (!tokens.access || !tokens.refresh) {
+      throw new Error('Invalid token format received');
+    }
     
     // Store tokens and username
-    await this.storeAuthData(response.data, username);
+    await this.storeAuthData(tokens, username);
   },
 
   async storeAuthData(tokens: TokenObtainPairResponse, username: string): Promise<void> {
-    await AsyncStorage.multiSet([
+    if (!tokens.access || !tokens.refresh || !username) {
+      throw new Error('Missing required data for storage');
+    }
+
+    const items: [string, string][] = [
       [TOKEN_KEY, tokens.access],
       [REFRESH_TOKEN_KEY, tokens.refresh],
       [USERNAME_KEY, username]
-    ]);
+    ];
+
+    // Validate no null/undefined values
+    if (items.some(([_, value]) => value == null)) {
+      throw new Error('Cannot store null or undefined values');
+    }
+
+    await AsyncStorage.multiSet(items);
   },
 
   async refreshToken(): Promise<string | null> {
@@ -41,6 +52,9 @@ export const authService = {
     try {
       const response = await publicApi.post<TokenObtainPairResponse>('/auth/jwt/refresh/', { refresh });
       const { access } = response.data;
+      if (!access) {
+        throw new Error('No access token received from refresh');
+      }
       await AsyncStorage.setItem(TOKEN_KEY, access);
       return access;
     } catch (error) {

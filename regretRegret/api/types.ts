@@ -28,6 +28,7 @@ export interface User {
   id: number;
   username: string;
   is_active: boolean;
+  tokens: TokenObtainPairResponse;  // This is an object containing access and refresh tokens
 }
 
 export interface UserRegistrationRequest {
