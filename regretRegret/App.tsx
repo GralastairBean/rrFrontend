@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Task {
   id: string;
@@ -11,6 +11,27 @@ interface Task {
 export default function App() {
   const [task, setTask] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDate = (date: Date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const day = days[date.getDay()];
+    const month = months[date.getMonth()];
+    const dateNum = date.getDate();
+    const year = date.getFullYear();
+
+    return `${day}, ${month} ${dateNum}, ${year}`;
+  };
 
   const addTask = () => {
     if (task.trim().length > 0) {
@@ -31,6 +52,7 @@ export default function App() {
       style={styles.container}
     >
       <StatusBar style="light" />
+      <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
       <Text style={styles.title}>Regret Regret</Text>
       
       <View style={styles.inputContainer}>
@@ -75,6 +97,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
     paddingTop: 60,
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 10,
   },
   title: {
     fontSize: 28,
