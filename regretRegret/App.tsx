@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
+import { authService } from './api/services/authService';
+import Registration from './components/Registration';
 
 interface Task {
   id: string;
@@ -12,6 +14,11 @@ export default function App() {
   const [task, setTask] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,6 +27,15 @@ export default function App() {
 
     return () => clearInterval(timer);
   }, []);
+
+  const checkAuthStatus = async () => {
+    const authenticated = await authService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+  };
+
+  const handleRegistrationComplete = () => {
+    setIsAuthenticated(true);
+  };
 
   const formatDate = (date: Date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -46,6 +62,22 @@ export default function App() {
     ));
   };
 
+  // Show loading state
+  if (isAuthenticated === null) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="light" />
+        <Text style={styles.title}>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Show registration screen if not authenticated
+  if (!isAuthenticated) {
+    return <Registration onRegistrationComplete={handleRegistrationComplete} />;
+  }
+
+  // Show main todo list if authenticated
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
