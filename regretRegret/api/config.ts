@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AxiosRequestConfig } from 'axios';
 import { Platform } from 'react-native';
 import { authService } from './services/authService';
+import { handleApiError } from './utils/errorHandling';
 import Constants from 'expo-constants';
 
 // Get the appropriate base URL for the platform
@@ -36,51 +37,120 @@ const getBaseUrl = () => {
   return 'http://localhost:8000';
 };
 
+// Helper function to convert data to FormData
+const convertToFormData = (data: any): FormData => {
+  const formData = new FormData();
+  
+  // Handle nested objects and arrays
+  const appendFormData = (data: any, parentKey?: string) => {
+    if (data && typeof data === 'object' && !(data instanceof File) && !(data instanceof Blob)) {
+      Object.entries(data).forEach(([key, value]) => {
+        const formKey = parentKey ? `${parentKey}[${key}]` : key;
+        
+        if (value === null || value === undefined) {
+          return;
+        }
+        
+        if (value instanceof File || value instanceof Blob) {
+          formData.append(formKey, value);
+        } else if (typeof value === 'object') {
+          appendFormData(value, formKey);
+        } else {
+          formData.append(formKey, String(value));
+        }
+      });
+    } else if (data !== null && data !== undefined) {
+      formData.append(parentKey || 'data', data);
+    }
+  };
+  
+  appendFormData(data);
+  return formData;
+};
+
 // Create an axios instance with default config
 export const api = axios.create({
   baseURL: getBaseUrl(),
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'multipart/form-data',
   },
   withCredentials: true, // Enable cookie authentication
 });
 
-// Add request interceptor for JWT token
+// Create a public API instance without auth
+export const publicApi = axios.create({
+  baseURL: getBaseUrl(),
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  }
+});
+
+// Add request interceptor for JWT token and form data conversion
 api.interceptors.request.use(
-  (config) => {
-    return authService.getAccessToken().then(token => {
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    // Add auth token
+    const token = await authService.getAccessToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Convert POST data to FormData
+    if (config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
+      config.data = convertToFormData(config.data);
+      if (config.headers) {
+        config.headers['Content-Type'] = 'multipart/form-data';
       }
-      return config;
-    });
+    }
+
+    return config;
   }
 );
 
-// Add response interceptor for token refresh
+// Add request interceptor for form data conversion to public API
+publicApi.interceptors.request.use(
+  (config) => {
+    // Convert POST data to FormData
+    if (config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
+      config.data = convertToFormData(config.data);
+      if (config.headers) {
+        config.headers['Content-Type'] = 'multipart/form-data';
+      }
+    }
+
+    return config;
+  }
+);
+
+// Add response interceptor for token refresh and error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    if (!originalRequest) return Promise.reject(error);
+    if (!originalRequest) return Promise.reject(handleApiError(error));
     
     // If the error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
-      return authService.refreshToken().then(newToken => {
+      try {
+        const newToken = await authService.refreshToken();
         if (newToken && originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
         }
-        return Promise.reject(error);
-      }).catch(async (refreshError) => {
-        // If refresh fails, clear auth and let the error propagate
+      } catch (refreshError) {
+        // If refresh fails, clear auth and handle the error
         await authService.clearAuth();
-        return Promise.reject(error);
-      });
+        return Promise.reject(handleApiError(refreshError));
+      }
     }
     
-    return Promise.reject(error);
+    return Promise.reject(handleApiError(error));
   }
+);
+
+// Add error handling to public API
+publicApi.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject(handleApiError(error))
 ); 

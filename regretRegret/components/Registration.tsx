@@ -8,24 +8,24 @@ interface RegistrationProps {
 
 export default function Registration({ onRegistrationComplete }: RegistrationProps) {
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (username.trim().length === 0 || password.trim().length === 0) {
-      Alert.alert('Error', 'Please enter both username and password');
+    if (username.trim().length === 0) {
+      Alert.alert('Error', 'Please enter a username');
       return;
     }
 
     setIsLoading(true);
     try {
-      await authService.register({
-        username: username.trim(),
-        password: password.trim()
-      });
+      await authService.register(username.trim());
       onRegistrationComplete();
     } catch (error) {
-      Alert.alert('Registration Failed', 'Please try again with a different username');
+      if (error instanceof Error) {
+        Alert.alert('Registration Failed', error.message);
+      } else {
+        Alert.alert('Registration Failed', 'An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +37,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       style={styles.container}
     >
       <Text style={styles.title}>Welcome to Regret Regret</Text>
-      <Text style={styles.subtitle}>Create your account</Text>
+      <Text style={styles.subtitle}>Choose your username to begin</Text>
       
       <View style={styles.form}>
         <TextInput
@@ -47,26 +47,17 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
           placeholder="Choose a username"
           placeholderTextColor="#666"
           autoCapitalize="none"
-          keyboardAppearance="dark"
-          editable={!isLoading}
-        />
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Choose a password"
-          placeholderTextColor="#666"
-          secureTextEntry
+          autoCorrect={false}
           keyboardAppearance="dark"
           editable={!isLoading}
         />
         <TouchableOpacity 
           style={[
             styles.button,
-            (username.trim().length === 0 || password.trim().length === 0 || isLoading) && styles.buttonDisabled
+            (username.trim().length === 0 || isLoading) && styles.buttonDisabled
           ]} 
           onPress={handleRegister}
-          disabled={username.trim().length === 0 || password.trim().length === 0 || isLoading}
+          disabled={username.trim().length === 0 || isLoading}
         >
           <Text style={styles.buttonText}>
             {isLoading ? 'Creating Account...' : 'Create Account'}

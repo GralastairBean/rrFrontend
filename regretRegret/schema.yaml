@@ -264,6 +264,7 @@ paths:
       security:
       - jwtAuth: []
       - cookieAuth: []
+      - {}
       responses:
         '201':
           content:
