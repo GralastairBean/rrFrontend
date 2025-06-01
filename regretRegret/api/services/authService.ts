@@ -1,21 +1,38 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../config';
-import { TokenObtainPairRequest, TokenObtainPairResponse, TokenRefreshRequest, TokenRefreshResponse } from '../types';
+import { TokenObtainPairRequest, TokenObtainPairResponse, TokenRefreshRequest, TokenRefreshResponse, User, UserRegistrationRequest } from '../types';
 
 const ACCESS_TOKEN_KEY = '@auth_access_token';
 const REFRESH_TOKEN_KEY = '@auth_refresh_token';
-const USER_EMAIL_KEY = '@user_email';
+const USERNAME_KEY = '@username';
 
 export const authService = {
-  // Login with email and password
-  login: async (credentials: TokenObtainPairRequest): Promise<TokenObtainPairResponse> => {
+  // Register a new user and obtain tokens
+  register: async (username: string): Promise<TokenObtainPairResponse> => {
+    // Generate a random password for the user
+    const password = Math.random().toString(36).slice(-8);
+    
+    const registrationData: UserRegistrationRequest = {
+      username,
+      password
+    };
+
+    // First, create the user
+    await api.post<User>('/auth/user/', registrationData);
+
+    // Then, obtain tokens
+    const credentials: TokenObtainPairRequest = {
+      username,
+      password
+    };
+
     const response = await api.post<TokenObtainPairResponse>('/auth/jwt/create/', credentials);
     
-    // Store the auth tokens and email
+    // Store the auth tokens and username
     await AsyncStorage.multiSet([
       [ACCESS_TOKEN_KEY, response.data.access],
       [REFRESH_TOKEN_KEY, response.data.refresh],
-      [USER_EMAIL_KEY, credentials.email]
+      [USERNAME_KEY, username]
     ]);
     
     return response.data;
@@ -53,9 +70,9 @@ export const authService = {
     return AsyncStorage.getItem(REFRESH_TOKEN_KEY);
   },
 
-  // Get the stored user email
-  getUserEmail: async (): Promise<string | null> => {
-    return AsyncStorage.getItem(USER_EMAIL_KEY);
+  // Get the stored username
+  getStoredUsername: async (): Promise<string | null> => {
+    return AsyncStorage.getItem(USERNAME_KEY);
   },
 
   // Check if the user is authenticated
@@ -69,6 +86,6 @@ export const authService = {
 
   // Clear stored authentication data (logout)
   clearAuth: async (): Promise<void> => {
-    await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USER_EMAIL_KEY]);
+    await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USERNAME_KEY]);
   },
 }; 

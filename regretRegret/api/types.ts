@@ -5,16 +5,9 @@ export interface ApiResponse<T> {
   status: number;
 }
 
-// Generic error response
-export interface ApiError {
-  message: string;
-  code: string;
-  status: number;
-}
-
-// Authentication types
+// Auth types
 export interface TokenObtainPairRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -29,6 +22,17 @@ export interface TokenRefreshRequest {
 
 export interface TokenRefreshResponse {
   access: string;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  is_active: boolean;
+}
+
+export interface UserRegistrationRequest {
+  username: string;
+  password: string;
 }
 
 // Checklist types
@@ -52,7 +56,12 @@ export interface CreateRegretRequest {
   description: string;
 }
 
-// Example of a specific API model (modify based on your actual API)
+export interface PatchedRegret {
+  description?: string;
+  success?: boolean;
+}
+
+// Task types (for legacy support)
 export interface Task {
   id: string;
   text: string;
@@ -61,7 +70,6 @@ export interface Task {
   updatedAt: string;
 }
 
-// Example request types (modify based on your actual API)
 export interface CreateTaskRequest {
   text: string;
 }

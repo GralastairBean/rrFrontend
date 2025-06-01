@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { authService } from '../api/services/authService';
-import { TokenObtainPairRequest } from '../api/types';
+import { authService } from '../../src/api/services/authService';
+import { TokenObtainPairRequest } from '../../src/api/types';
 
 export const useAuth = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
