@@ -1,10 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { api, publicApi } from '../config';
 import type { TokenObtainPairResponse, User } from '../types';
 
-const TOKEN_KEY = '@auth_token';
-const REFRESH_TOKEN_KEY = '@auth_refresh_token';
-const USERNAME_KEY = '@auth_username';
+const TOKEN_KEY = 'auth.token';
+const REFRESH_TOKEN_KEY = 'auth.refresh_token';
+const USERNAME_KEY = 'auth.username';
 
 export const authService = {
   async register(username: string): Promise<void> {
@@ -31,18 +31,12 @@ export const authService = {
       throw new Error('Missing required data for storage');
     }
 
-    const items: [string, string][] = [
-      [TOKEN_KEY, tokens.access],
-      [REFRESH_TOKEN_KEY, tokens.refresh],
-      [USERNAME_KEY, username]
-    ];
-
-    // Validate no null/undefined values
-    if (items.some(([_, value]) => value == null)) {
-      throw new Error('Cannot store null or undefined values');
-    }
-
-    await AsyncStorage.multiSet(items);
+    // Store tokens and username securely
+    await Promise.all([
+      SecureStore.setItemAsync(TOKEN_KEY, tokens.access),
+      SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refresh),
+      SecureStore.setItemAsync(USERNAME_KEY, username)
+    ]);
   },
 
   async refreshToken(): Promise<string | null> {
@@ -55,7 +49,7 @@ export const authService = {
       if (!access) {
         throw new Error('No access token received from refresh');
       }
-      await AsyncStorage.setItem(TOKEN_KEY, access);
+      await SecureStore.setItemAsync(TOKEN_KEY, access);
       return access;
     } catch (error) {
       // If refresh fails, clear auth and force re-registration
@@ -65,15 +59,15 @@ export const authService = {
   },
 
   async getAccessToken(): Promise<string | null> {
-    return AsyncStorage.getItem(TOKEN_KEY);
+    return SecureStore.getItemAsync(TOKEN_KEY);
   },
 
   async getRefreshToken(): Promise<string | null> {
-    return AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+    return SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
   },
 
   async getStoredUsername(): Promise<string | null> {
-    return AsyncStorage.getItem(USERNAME_KEY);
+    return SecureStore.getItemAsync(USERNAME_KEY);
   },
 
   async isAuthenticated(): Promise<boolean> {
@@ -90,6 +84,10 @@ export const authService = {
   },
 
   async clearAuth(): Promise<void> {
-    await AsyncStorage.multiRemove([TOKEN_KEY, REFRESH_TOKEN_KEY, USERNAME_KEY]);
+    await Promise.all([
+      SecureStore.deleteItemAsync(TOKEN_KEY),
+      SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+      SecureStore.deleteItemAsync(USERNAME_KEY)
+    ]);
   }
 }; 
