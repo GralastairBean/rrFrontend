@@ -17,6 +17,13 @@ export default function Checklist() {
     }
   };
 
+  const handleToggleRegret = async (regretId: number, currentSuccess: boolean) => {
+    // Only allow toggling if the regret is not already successful
+    if (!currentSuccess) {
+      await toggleRegretSuccess(regretId);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -64,8 +71,12 @@ export default function Checklist() {
         renderItem={({ item }) => (
           <View style={styles.regretItem}>
             <TouchableOpacity 
-              style={styles.checkbox} 
-              onPress={() => toggleRegretSuccess(item.id)}
+              style={[
+                styles.checkbox,
+                item.success && styles.checkboxDisabled
+              ]} 
+              onPress={() => handleToggleRegret(item.id, item.success)}
+              disabled={item.success}
             >
               {item.success && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
@@ -157,8 +168,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  checkboxDisabled: {
+    borderColor: '#1b5e20',
+    backgroundColor: '#1b5e20',
+  },
   checkmark: {
-    color: '#4CAF50',
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
