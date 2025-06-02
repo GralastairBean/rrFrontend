@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 const getBaseUrl = () => {
   // If an explicit API URL is set in environment, use that
   if (process.env.EXPO_PUBLIC_API_URL) {
+    console.log('Using environment API URL:', process.env.EXPO_PUBLIC_API_URL);
     return process.env.EXPO_PUBLIC_API_URL;
   }
 
@@ -16,26 +17,44 @@ const getBaseUrl = () => {
   const debuggerHost = Constants.expoConfig?.hostUri;
   const localhost = debuggerHost?.split(':')[0];
   
+  console.log('Debug host info:', { debuggerHost, localhost, platform: Platform.OS });
+  
   if (__DEV__) {
-    // For iOS devices, use the development machine's IP
-    if (Platform.OS === 'ios' && localhost) {
-      return `http://${localhost}:8000`;
+    // For physical devices (both iOS and Android), use the development machine's IP
+    if (localhost && !Constants.isDevice) {
+      const url = `http://${localhost}:8000`;
+      console.log('Using physical device URL:', url);
+      return url;
     }
     
     // For iOS simulator, use localhost
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' && !Constants.isDevice) {
+      console.log('Using iOS simulator URL: http://localhost:8000');
       return 'http://localhost:8000';
     }
     
     // For Android emulator, use 10.0.2.2 (special Android emulator hostname for localhost)
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !Constants.isDevice) {
+      console.log('Using Android emulator URL: http://10.0.2.2:8000');
       return 'http://10.0.2.2:8000';
+    }
+
+    // For any physical device in development, use the machine's IP
+    if (localhost) {
+      const url = `http://${localhost}:8000`;
+      console.log('Using development machine IP:', url);
+      return url;
     }
   }
   
   // Default fallback (should be your production API URL in non-DEV mode)
+  console.log('Using default fallback URL: http://localhost:8000');
   return 'http://localhost:8000';
 };
+
+// Get the base URL once at startup
+const BASE_URL = getBaseUrl();
+console.log('Final API Base URL:', BASE_URL);
 
 // Helper function to convert data to FormData
 const convertToFormData = (data: any): FormData => {
@@ -70,24 +89,33 @@ const convertToFormData = (data: any): FormData => {
 
 // Create an axios instance with default config
 export const api = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'multipart/form-data',
   },
   withCredentials: true, // Enable cookie authentication
+  timeout: 10000, // Add a timeout
 });
 
 // Create a public API instance without auth
 export const publicApi = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'multipart/form-data',
-  }
+  },
+  timeout: 10000, // Add a timeout
 });
 
 // Add request interceptor for JWT token and form data conversion
 api.interceptors.request.use(
   async (config) => {
+    console.log('Making authenticated request:', {
+      method: config.method,
+      url: config.url,
+      baseURL: config.baseURL,
+      data: config.data
+    });
+
     // Add auth token
     const token = await authService.getAccessToken();
     if (token && config.headers) {
@@ -109,6 +137,13 @@ api.interceptors.request.use(
 // Add request interceptor for form data conversion to public API
 publicApi.interceptors.request.use(
   (config) => {
+    console.log('Making public request:', {
+      method: config.method,
+      url: config.url,
+      baseURL: config.baseURL,
+      data: config.data
+    });
+
     // Convert POST data to FormData
     if (config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
       config.data = convertToFormData(config.data);
@@ -125,6 +160,14 @@ publicApi.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.error('API request failed:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     if (!originalRequest) return Promise.reject(handleApiError(error));
     
@@ -152,5 +195,14 @@ api.interceptors.response.use(
 // Add error handling to public API
 publicApi.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(handleApiError(error))
+  (error) => {
+    console.error('Public API request failed:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    return Promise.reject(handleApiError(error));
+  }
 ); 

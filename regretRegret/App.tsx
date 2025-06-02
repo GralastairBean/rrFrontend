@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
 import { authService } from './api/services/authService';
@@ -15,6 +15,7 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     checkAuthStatus();
@@ -29,12 +30,21 @@ export default function App() {
   }, []);
 
   const checkAuthStatus = async () => {
-    const authenticated = await authService.isAuthenticated();
-    setIsAuthenticated(authenticated);
+    try {
+      setIsLoading(true);
+      const authenticated = await authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+    } catch (error) {
+      console.error('Failed to check auth status:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegistrationComplete = () => {
-    setIsAuthenticated(true);
+  const handleRegistrationComplete = async () => {
+    // Verify authentication after registration
+    await checkAuthStatus();
   };
 
   const formatDate = (date: Date) => {
@@ -63,11 +73,12 @@ export default function App() {
   };
 
   // Show loading state
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, styles.centerContent]}>
         <StatusBar style="light" />
-        <Text style={styles.title}>Loading...</Text>
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text style={[styles.title, { marginTop: 20 }]}>Loading...</Text>
       </View>
     );
   }
@@ -129,6 +140,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
     paddingTop: 60,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   dateText: {
     fontSize: 16,
