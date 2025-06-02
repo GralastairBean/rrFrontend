@@ -1,10 +1,21 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useChecklist } from '../hooks/useChecklist';
+import { Regret } from '../api/types';
 
-export default function Checklist() {
+interface ChecklistProps {
+  onRegretsUpdate?: (regrets: Regret[]) => void;
+}
+
+export default function Checklist({ onRegretsUpdate }: ChecklistProps) {
   const [newRegret, setNewRegret] = useState('');
   const { checklist, regrets, loading, error, createRegret, toggleRegretSuccess } = useChecklist({ today: true });
+
+  useEffect(() => {
+    if (onRegretsUpdate) {
+      onRegretsUpdate(regrets);
+    }
+  }, [regrets, onRegretsUpdate]);
 
   const handleAddRegret = async () => {
     if (newRegret.trim().length === 0) return;

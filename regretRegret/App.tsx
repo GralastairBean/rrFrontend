@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { authService } from './api/services/authService';
 import Registration from './components/Registration';
 import Checklist from './components/Checklist';
+import { Regret } from './api/types';
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [regrets, setRegrets] = useState<Regret[]>([]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -52,6 +54,16 @@ export default function App() {
     return `${day}, ${month} ${dateNum}, ${year}`;
   };
 
+  const handleRegretsUpdate = (updatedRegrets: Regret[]) => {
+    setRegrets(updatedRegrets);
+  };
+
+  const calculateRegretIndex = () => {
+    if (regrets.length === 0) return 100;
+    const uncompletedCount = regrets.filter(r => !r.success).length;
+    return Math.round((uncompletedCount / regrets.length) * 100);
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -77,7 +89,8 @@ export default function App() {
       <StatusBar style="light" />
       <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
       <Text style={styles.title}>Regret Regret</Text>
-      <Checklist />
+      <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
+      <Checklist onRegretsUpdate={handleRegretsUpdate} />
     </KeyboardAvoidingView>
   );
 }
@@ -103,6 +116,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4CAF50',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 20,
   }
 });
