@@ -37,12 +37,17 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       style={styles.container}
     >
       <Image 
-        source={require('../assets/frog_1.jpeg')}
+        source={require('../assets/frog_1.png')}
         style={styles.frogImage}
         resizeMode="contain"
       />
-      <Text style={styles.title}>Welcome to Regret Regret</Text>
-      <Text style={styles.subtitle}>Choose your username to begin</Text>
+      <Text 
+        style={styles.motto}
+        numberOfLines={1}
+      >
+        the better you has less regret (regret)...
+      </Text>
+      <Text style={styles.welcomeText}>choose a username to begin</Text>
       
       <View style={styles.form}>
         <TextInput
@@ -82,20 +87,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   frogImage: {
-    width: 200,
-    height: 200,
+    width: '100%',
+    maxWidth: 400,
+    height: undefined,
+    aspectRatio: 1,
     marginBottom: 20,
+    marginTop: 10,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
+  motto: {
+    fontSize: 18,
+    fontStyle: 'italic',
     color: '#888',
+    textAlign: 'center',
+    marginBottom: 40,
+    flexShrink: 1,
+  },
+  welcomeText: {
+    fontSize: 20,
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 40,
   },

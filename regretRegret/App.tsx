@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
 import { authService } from './api/services/authService';
@@ -122,10 +122,16 @@ export default function App() {
     >
       <StatusBar style="light" />
       <View style={styles.header}>
-        <View style={styles.headerLeft} />
         <View style={styles.headerCenter}>
           <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
-          <Text style={styles.title}>Regret Regret</Text>
+          <View style={styles.titleContainer}>
+            <Image 
+              source={require('./assets/frog_2.jpeg')}
+              style={styles.frogImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>Regret Regret</Text>
+          </View>
           <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
         </View>
         <TouchableOpacity 
@@ -156,8 +162,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
-  headerLeft: {
-    width: 40,
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  frogImage: {
+    width: 60,
+    height: 60,
+    marginRight: 10,
   },
   headerCenter: {
     flex: 1,
@@ -182,7 +196,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4CAF50',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 0,
   },
   subtitle: {
     fontSize: 16,
