@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { useState } from 'react';
 import { authService } from '../api/services/authService';
 
@@ -36,6 +36,11 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
+      <Image 
+        source={require('../assets/frog_1.jpeg')}
+        style={styles.frogImage}
+        resizeMode="contain"
+      />
       <Text style={styles.title}>Welcome to Regret Regret</Text>
       <Text style={styles.subtitle}>Choose your username to begin</Text>
       
@@ -44,7 +49,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
           style={styles.input}
           value={username}
           onChangeText={setUsername}
-          placeholder="Choose a username"
+          placeholder="Enter username"
           placeholderTextColor="#666"
           autoCapitalize="none"
           autoCorrect={false}
@@ -75,6 +80,11 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  frogImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,
