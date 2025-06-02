@@ -101,7 +101,7 @@ export const api = axios.create({
 export const publicApi = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'multipart/form-data',
+    'Content-Type': 'application/json',
   },
   timeout: 10000, // Add a timeout
 });
@@ -144,12 +144,9 @@ publicApi.interceptors.request.use(
       data: config.data
     });
 
-    // Convert POST data to FormData
-    if (config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
+    // Only convert to FormData if specifically needed
+    if (config.headers?.['Content-Type'] === 'multipart/form-data' && config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
       config.data = convertToFormData(config.data);
-      if (config.headers) {
-        config.headers['Content-Type'] = 'multipart/form-data';
-      }
     }
 
     return config;
