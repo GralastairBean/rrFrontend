@@ -15,15 +15,15 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
       setLoading(true);
       setError(null);
       
-      const response = await checklistService.getChecklists(params);
-      const firstChecklist = response.data[0]; // Get the first checklist
+      const checklists = await checklistService.getChecklists(params);
+      const firstChecklist = checklists[0]; // Get the first checklist
       
       if (firstChecklist) {
         setChecklist(firstChecklist);
         
         // Get regrets for this checklist
-        const regretsResponse = await checklistService.getChecklistRegrets(firstChecklist.id);
-        setRegrets(regretsResponse.data);
+        const checklistRegrets = await checklistService.getChecklistRegrets(firstChecklist.id);
+        setRegrets(checklistRegrets);
       } else {
         setError('No checklist found');
       }
@@ -55,10 +55,10 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
         description
       };
       
-      const response = await checklistService.createRegret(checklist.id, newRegret);
-      setRegrets(prev => [...prev, response.data]);
+      const createdRegret = await checklistService.createRegret(checklist.id, newRegret);
+      setRegrets(prev => [...prev, createdRegret]);
       
-      return response.data;
+      return createdRegret;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create regret');
       throw err;
@@ -83,15 +83,15 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
         throw new Error('Regret not found');
       }
       
-      const response = await checklistService.updateRegret(checklist.id, regretId, {
+      const updatedRegret = await checklistService.updateRegret(checklist.id, regretId, {
         success: !regret.success
       });
       
       setRegrets(prev => prev.map(r => 
-        r.id === regretId ? response.data : r
+        r.id === regretId ? updatedRegret : r
       ));
       
-      return response.data;
+      return updatedRegret;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update regret');
       throw err;

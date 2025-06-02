@@ -1,5 +1,5 @@
 import { api } from '../config';
-import { ApiResponse, Checklist, Regret, CreateRegretRequest } from '../types';
+import { Checklist, Regret, CreateRegretRequest } from '../types';
 
 export interface ChecklistQueryParams {
   completed?: boolean;
@@ -12,33 +12,33 @@ export interface ChecklistQueryParams {
 
 export const checklistService = {
   // Get checklists with optional filters
-  getChecklists: async (params?: ChecklistQueryParams): Promise<ApiResponse<Checklist[]>> => {
-    const response = await api.get<ApiResponse<Checklist[]>>('/api/checklists/', {
+  getChecklists: async (params?: ChecklistQueryParams): Promise<Checklist[]> => {
+    const response = await api.get<Checklist[]>('/api/checklists/', {
       params
     });
     return response.data;
   },
 
   // Get today's checklist (convenience method)
-  getTodayChecklist: async (): Promise<ApiResponse<Checklist[]>> => {
+  getTodayChecklist: async (): Promise<Checklist[]> => {
     return checklistService.getChecklists({ today: true });
   },
 
   // Get regrets for a checklist
-  getChecklistRegrets: async (checklistId: number): Promise<ApiResponse<Regret[]>> => {
-    const response = await api.get<ApiResponse<Regret[]>>(`/api/checklists/${checklistId}/regrets/`);
+  getChecklistRegrets: async (checklistId: number): Promise<Regret[]> => {
+    const response = await api.get<Regret[]>(`/api/checklists/${checklistId}/regrets/`);
     return response.data;
   },
 
   // Create a new regret for a checklist
-  createRegret: async (checklistId: number, regret: CreateRegretRequest): Promise<ApiResponse<Regret>> => {
-    const response = await api.post<ApiResponse<Regret>>(`/api/checklists/${checklistId}/regrets/`, regret);
+  createRegret: async (checklistId: number, regret: CreateRegretRequest): Promise<Regret> => {
+    const response = await api.post<Regret>(`/api/checklists/${checklistId}/regrets/`, regret);
     return response.data;
   },
 
   // Update a regret
-  updateRegret: async (checklistId: number, regretId: number, regret: Partial<Regret>): Promise<ApiResponse<Regret>> => {
-    const response = await api.patch<ApiResponse<Regret>>(`/api/checklists/${checklistId}/regrets/${regretId}/`, regret);
+  updateRegret: async (checklistId: number, regretId: number, regret: Partial<Regret>): Promise<Regret> => {
+    const response = await api.patch<Regret>(`/api/checklists/${checklistId}/regrets/${regretId}/`, regret);
     return response.data;
   }
 }; 
