@@ -42,12 +42,11 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
         resizeMode="contain"
       />
       <Text 
-        style={styles.motto}
+        style={styles.welcomeText}
         numberOfLines={1}
       >
-        the better you has less regret (regret)...
+        Welcome, choose a username to begin...
       </Text>
-      <Text style={styles.welcomeText}>choose a username to begin</Text>
       
       <View style={styles.form}>
         <TextInput
@@ -82,7 +81,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
-    paddingTop: 60,
+    paddingTop: 20,
     alignItems: 'center',
     paddingHorizontal: 20,
   },
@@ -92,21 +91,14 @@ const styles = StyleSheet.create({
     height: undefined,
     aspectRatio: 1,
     marginBottom: 20,
-    marginTop: 10,
+    marginTop: 0,
   },
-  motto: {
-    fontSize: 18,
-    fontStyle: 'italic',
+  welcomeText: {
+    fontSize: 16,
     color: '#888',
     textAlign: 'center',
     marginBottom: 40,
     flexShrink: 1,
-  },
-  welcomeText: {
-    fontSize: 20,
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 40,
   },
   form: {
     width: '100%',
