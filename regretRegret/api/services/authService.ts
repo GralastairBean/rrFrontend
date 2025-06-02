@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { api, publicApi } from '../config';
 import type { TokenObtainPairResponse, User } from '../types';
 import type { AxiosError } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TOKEN_KEY = 'auth.token';
 const REFRESH_TOKEN_KEY = 'auth.refresh_token';
@@ -153,14 +154,18 @@ export const authService = {
   async clearAuth(): Promise<void> {
     console.log('Clearing authentication data...');
     // Clear the stored tokens
-    await Promise.all([
-      SecureStore.deleteItemAsync(TOKEN_KEY),
-      SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
-      SecureStore.deleteItemAsync(USERNAME_KEY)
+    await AsyncStorage.multiRemove([
+      TOKEN_KEY,
+      REFRESH_TOKEN_KEY,
+      USERNAME_KEY
     ]);
 
     // Clear the API client headers
     delete api.defaults.headers.common['Authorization'];
     console.log('Authentication data cleared');
+  },
+
+  async logout(): Promise<void> {
+    await this.clearAuth();
   }
 }; 

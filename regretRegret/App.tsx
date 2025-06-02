@@ -54,6 +54,17 @@ export default function App() {
     await checkAuthStatus();
   };
 
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      setIsAuthenticated(false);
+      setUsername('');
+      setCurrentScreen('main');
+    } catch (error) {
+      console.error('Failed to logout:', error);
+    }
+  };
+
   const formatDate = (date: Date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -98,6 +109,7 @@ export default function App() {
       <Settings 
         onBack={() => setCurrentScreen('main')} 
         username={username}
+        onLogout={handleLogout}
       />
     );
   }

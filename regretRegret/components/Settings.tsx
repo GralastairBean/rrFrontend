@@ -1,13 +1,33 @@
-import { StyleSheet, Text, View, TouchableOpacity, Switch } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useState } from 'react';
 
 interface SettingsProps {
   onBack: () => void;
   username: string;
+  onLogout: () => void;
 }
 
-export default function Settings({ onBack, username }: SettingsProps) {
+export default function Settings({ onBack, username, onLogout }: SettingsProps) {
   const [testEnabled, setTestEnabled] = useState(false);
+
+  const handleLogoutPress = () => {
+    Alert.alert(
+      'Confirm Logout',
+      'Are you sure you want to log out?',
+      [
+        {
+          text: 'Go Back',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: onLogout,
+          style: 'destructive',
+        },
+      ],
+      { cancelable: false }
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -31,6 +51,12 @@ export default function Settings({ onBack, username }: SettingsProps) {
           trackColor={{ false: '#333', true: '#4CAF50' }}
           thumbColor={testEnabled ? '#fff' : '#f4f3f4'}
         />
+      </View>
+
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
+          <Text style={styles.logoutButtonText}>Log Out</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -90,5 +116,23 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     color: '#fff',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+  },
+  logoutButton: {
+    backgroundColor: '#ff4444',
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 
