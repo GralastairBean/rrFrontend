@@ -166,7 +166,7 @@ api.interceptors.response.use(
     });
 
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    if (!originalRequest) return Promise.reject(handleApiError(error));
+    if (!originalRequest) return Promise.reject(handleApiError(error, undefined, false));
     
     // If the error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -181,11 +181,11 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // If refresh fails, clear auth and handle the error
         await authService.clearAuth();
-        return Promise.reject(handleApiError(refreshError));
+        return Promise.reject(handleApiError(refreshError, undefined, false));
       }
     }
     
-    return Promise.reject(handleApiError(error));
+    return Promise.reject(handleApiError(error, undefined, false));
   }
 );
 
@@ -200,6 +200,8 @@ publicApi.interceptors.response.use(
       data: error.response?.data,
       message: error.message
     });
-    return Promise.reject(handleApiError(error));
+    // Don't show alerts for auth check failures
+    const isAuthCheck = error.config?.url === '/api/checklists/';
+    return Promise.reject(handleApiError(error, undefined, !isAuthCheck));
   }
 ); 

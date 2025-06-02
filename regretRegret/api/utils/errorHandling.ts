@@ -5,26 +5,27 @@ interface DjangoError {
   [key: string]: string[];
 }
 
-export const handleApiError = (error: unknown, fallbackMessage = 'An unexpected error occurred'): Error => {
+export const handleApiError = (error: unknown, fallbackMessage = 'An unexpected error occurred', showAlert = true): Error => {
   if (!error) {
+    if (showAlert) Alert.alert('Error', fallbackMessage);
     return new Error(fallbackMessage);
   }
 
   // Handle Axios errors
   if (isAxiosError(error)) {
     const message = extractErrorMessage(error);
-    Alert.alert('Error', message);
+    if (showAlert) Alert.alert('Error', message);
     return new Error(message);
   }
 
   // Handle other errors
   if (error instanceof Error) {
-    Alert.alert('Error', error.message);
+    if (showAlert) Alert.alert('Error', error.message);
     return error;
   }
 
   // Handle unknown errors
-  Alert.alert('Error', fallbackMessage);
+  if (showAlert) Alert.alert('Error', fallbackMessage);
   return new Error(fallbackMessage);
 };
 
