@@ -33,8 +33,6 @@ export default function Network() {
         </View>
       </View>
 
-      <View style={styles.divider} />
-
       <Text style={styles.subtitle}>Daily Croak Subscribers</Text>
     </View>
   );
@@ -48,7 +46,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 30,
     alignItems: 'center',
   },
   title: {
@@ -60,6 +58,9 @@ const styles = StyleSheet.create({
   userInfo: {
     paddingHorizontal: 20,
     paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    marginBottom: 20,
     alignItems: 'center',
   },
   label: {
