@@ -121,7 +121,7 @@ export default function App() {
       style={styles.container}
     >
       <StatusBar style="light" />
-      <View style={styles.header}>
+      <View style={styles.mainContent}>
         <View style={styles.headerCenter}>
           <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
           <View style={styles.titleContainer}>
@@ -134,14 +134,46 @@ export default function App() {
           </View>
           <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.settingsButton}
-          onPress={() => setCurrentScreen('settings')}
-        >
-          <Text style={styles.settingsIcon}>⚙️</Text>
-        </TouchableOpacity>
+        <Checklist onRegretsUpdate={handleRegretsUpdate} />
       </View>
-      <Checklist onRegretsUpdate={handleRegretsUpdate} />
+      
+      <View style={styles.bottomSection}>
+        <View style={styles.separator} />
+        <View style={styles.iconRow}>
+          <TouchableOpacity 
+            style={[styles.iconButton, styles.userIconButton]}
+            onPress={() => {/* TODO: Handle user press */}}
+          >
+            <Image 
+              source={require('./assets/user_1.png')}
+              style={[styles.iconImage, styles.userIconImage]}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.iconButton}
+            onPress={() => {/* TODO: Handle graph press */}}
+          >
+            <Image 
+              source={require('./assets/graph_1.png')}
+              style={styles.iconImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.iconButton}
+            onPress={() => setCurrentScreen('settings')}
+          >
+            <Image 
+              source={require('./assets/settings_1.png')}
+              style={styles.iconImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -151,6 +183,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
     paddingTop: 60,
+  },
+  mainContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
+  },
+  bottomSection: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 30,
+    paddingTop: 20,
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#333',
+    width: '100%',
+    marginBottom: 20,
+  },
+  headerCenter: {
+    alignItems: 'center',
   },
   centerContent: {
     justifyContent: 'center',
@@ -173,18 +229,6 @@ const styles = StyleSheet.create({
     height: 60,
     marginRight: 10,
   },
-  headerCenter: {
-    flex: 1,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  settingsIcon: {
-    fontSize: 24,
-  },
   dateText: {
     fontSize: 16,
     color: '#888',
@@ -203,5 +247,29 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginBottom: 20,
-  }
+  },
+  iconRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingHorizontal: 30,
+  },
+  iconButton: {
+    width: 62,
+    height: 62,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconImage: {
+    width: 37,
+    height: 37,
+  },
+  userIconButton: {
+    width: 56,
+    height: 56,
+  },
+  userIconImage: {
+    width: 33,
+    height: 33,
+  },
 });
