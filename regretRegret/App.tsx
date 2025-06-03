@@ -6,9 +6,10 @@ import Registration from './components/Registration';
 import Checklist from './components/Checklist';
 import Settings from './components/Settings';
 import RegretHistory from './components/RegretHistory';
+import Network from './components/Network';
 import { Regret } from './api/types';
 
-type Screen = 'main' | 'settings' | 'history';
+type Screen = 'main' | 'settings' | 'history' | 'network';
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -124,6 +125,15 @@ export default function App() {
     );
   }
 
+  // Show network screen
+  if (currentScreen === 'network') {
+    return (
+      <Network 
+        onBack={() => setCurrentScreen('main')}
+      />
+    );
+  }
+
   // Show main checklist if authenticated
   return (
     <KeyboardAvoidingView 
@@ -152,7 +162,7 @@ export default function App() {
         <View style={styles.iconRow}>
           <TouchableOpacity 
             style={[styles.iconButton, styles.userIconButton]}
-            onPress={() => {/* TODO: Handle user press */}}
+            onPress={() => setCurrentScreen('network')}
           >
             <Image 
               source={require('./assets/network_1.png')}
