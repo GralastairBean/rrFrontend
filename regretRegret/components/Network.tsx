@@ -21,16 +21,19 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     marginBottom: 20,
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#4CAF50',
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
     color: '#888',
     paddingHorizontal: 20,
     marginBottom: 20,
+    textAlign: 'center',
   },
 }); 

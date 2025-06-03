@@ -67,11 +67,13 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     marginBottom: 30,
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#4CAF50',
+    textAlign: 'center',
   },
   userInfo: {
     paddingHorizontal: 20,
@@ -79,16 +81,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
     marginBottom: 20,
+    alignItems: 'center',
   },
   label: {
     fontSize: 14,
     color: '#888',
     marginBottom: 5,
+    textAlign: 'center',
   },
   username: {
     fontSize: 18,
     color: '#fff',
     fontWeight: '500',
+    textAlign: 'center',
   },
   settingItem: {
     flexDirection: 'row',

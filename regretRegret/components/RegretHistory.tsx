@@ -24,11 +24,13 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     marginBottom: 30,
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#4CAF50',
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -38,5 +40,6 @@ const styles = StyleSheet.create({
   placeholder: {
     color: '#666',
     fontSize: 16,
+    textAlign: 'center',
   },
 }); 

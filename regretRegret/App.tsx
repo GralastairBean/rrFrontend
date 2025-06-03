@@ -121,18 +121,22 @@ export default function App() {
       default:
         return (
           <View style={styles.mainContent}>
-            <View style={styles.headerCenter}>
-              <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
-              <View style={styles.titleContainer}>
-                <Image 
-                  source={require('./assets/frog_2.jpeg')}
-                  style={styles.frogImage}
-                  resizeMode="contain"
-                />
-                <Text style={styles.title}>Regret Regret</Text>
-              </View>
-              <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
+            <View style={styles.header}>
+              <Text style={styles.title}>Regret Regret</Text>
             </View>
+            
+            <View style={styles.subheaderInfo}>
+              <Image 
+                source={require('./assets/frog_2.jpeg')}
+                style={styles.frogImage}
+                resizeMode="contain"
+              />
+              <View style={styles.textInfo}>
+                <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
+                <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
+              </View>
+            </View>
+
             <Checklist onRegretsUpdate={handleRegretsUpdate} />
           </View>
         );
@@ -166,37 +170,39 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
   },
-  headerCenter: {
+  header: {
+    marginBottom: 20,
     alignItems: 'center',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  frogImage: {
-    width: 60,
-    height: 60,
-    marginRight: 10,
-  },
-  dateText: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: 10,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#4CAF50',
     textAlign: 'center',
-    marginBottom: 0,
+  },
+  subheaderInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    justifyContent: 'center',
+  },
+  frogImage: {
+    width: 50,
+    height: 50,
+    marginRight: 15,
+  },
+  textInfo: {
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 5,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#888',
     textAlign: 'center',
-    marginBottom: 20,
   },
 });
