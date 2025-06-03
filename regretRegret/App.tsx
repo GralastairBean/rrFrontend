@@ -5,9 +5,10 @@ import { authService } from './api/services/authService';
 import Registration from './components/Registration';
 import Checklist from './components/Checklist';
 import Settings from './components/Settings';
+import RegretHistory from './components/RegretHistory';
 import { Regret } from './api/types';
 
-type Screen = 'main' | 'settings';
+type Screen = 'main' | 'settings' | 'history';
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -114,6 +115,15 @@ export default function App() {
     );
   }
 
+  // Show history screen
+  if (currentScreen === 'history') {
+    return (
+      <RegretHistory 
+        onBack={() => setCurrentScreen('main')}
+      />
+    );
+  }
+
   // Show main checklist if authenticated
   return (
     <KeyboardAvoidingView 
@@ -153,7 +163,7 @@ export default function App() {
 
           <TouchableOpacity 
             style={styles.iconButton}
-            onPress={() => {/* TODO: Handle graph press */}}
+            onPress={() => setCurrentScreen('history')}
           >
             <Image 
               source={require('./assets/graph_1.png')}
