@@ -41,19 +41,13 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
         style={styles.frogImage}
         resizeMode="contain"
       />
-      <Text 
-        style={styles.welcomeText}
-        numberOfLines={1}
-      >
-        Welcome, choose a username to begin...
-      </Text>
       
       <View style={styles.form}>
         <TextInput
           style={styles.input}
           value={username}
           onChangeText={setUsername}
-          placeholder="Enter username"
+          placeholder="Choose a username to begin"
           placeholderTextColor="#666"
           autoCapitalize="none"
           autoCorrect={false}
@@ -90,15 +84,8 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     height: undefined,
     aspectRatio: 1,
-    marginBottom: 20,
+    marginBottom: 5,
     marginTop: 0,
-  },
-  welcomeText: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: 40,
-    flexShrink: 1,
   },
   form: {
     width: '100%',
@@ -114,6 +101,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     color: '#fff',
     marginBottom: 20,
+    textAlign: 'center',
   },
   button: {
     height: 48,
