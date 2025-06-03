@@ -83,6 +83,25 @@ export default function App() {
     setRegrets(updatedRegrets);
   };
 
+  const getRegretIndexColor = (value: number) => {
+    if (value <= 0) return '#4CAF50';  // Green
+    if (value >= 100) return '#f44336'; // Red
+    
+    if (value <= 25) {
+      // Green to Light Green
+      return '#8BC34A';
+    } else if (value <= 50) {
+      // Light Green to Yellow
+      return '#FFEB3B';
+    } else if (value <= 75) {
+      // Yellow to Orange
+      return '#FF9800';
+    } else {
+      // Orange to Red
+      return '#FF5722';
+    }
+  };
+
   const calculateRegretIndex = () => {
     if (regrets.length === 0) return 100;
     const uncompletedCount = regrets.filter(r => !r.success).length;
@@ -119,6 +138,7 @@ export default function App() {
       case 'network':
         return <Network />;
       default:
+        const regretIndex = calculateRegretIndex();
         return (
           <View style={styles.mainContent}>
             <View style={styles.header}>
@@ -133,7 +153,9 @@ export default function App() {
               />
               <View style={styles.textInfo}>
                 <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
-                <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
+                <Text style={[styles.subtitle, { color: getRegretIndexColor(regretIndex) }]}>
+                  Regret Index: {regretIndex}%
+                </Text>
               </View>
             </View>
 
