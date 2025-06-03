@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image, Platform, Pressable, Modal } from 'react-native';
 import { useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface SettingsProps {
   username: string;
@@ -7,7 +8,10 @@ interface SettingsProps {
 }
 
 export default function Settings({ username, onLogout }: SettingsProps) {
-  const [testEnabled, setTestEnabled] = useState(false);
+  const [sendDailyCroak, setSendDailyCroak] = useState(false);
+  const [endOfDay, setEndOfDay] = useState(new Date(new Date().setHours(23, 59)));
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempTime, setTempTime] = useState(new Date());
 
   const handleLogoutPress = () => {
     Alert.alert(
@@ -26,6 +30,34 @@ export default function Settings({ username, onLogout }: SettingsProps) {
       ],
       { cancelable: false }
     );
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const handleTimeChange = (event: any, selectedDate?: Date) => {
+    if (selectedDate) {
+      setTempTime(selectedDate);
+    }
+  };
+
+  const handleOpenTimePicker = () => {
+    setTempTime(endOfDay);
+    setShowTimePicker(true);
+  };
+
+  const handleConfirmTime = () => {
+    setEndOfDay(tempTime);
+    setShowTimePicker(false);
+  };
+
+  const handleCancelTime = () => {
+    setShowTimePicker(false);
   };
 
   return (
@@ -47,14 +79,56 @@ export default function Settings({ username, onLogout }: SettingsProps) {
       </View>
 
       <View style={styles.settingItem}>
-        <Text style={styles.settingLabel}>Test</Text>
+        <Text style={styles.settingLabel}>Send Daily Croak</Text>
         <Switch
-          value={testEnabled}
-          onValueChange={setTestEnabled}
+          value={sendDailyCroak}
+          onValueChange={setSendDailyCroak}
           trackColor={{ false: '#333', true: '#4CAF50' }}
-          thumbColor={testEnabled ? '#fff' : '#f4f3f4'}
+          thumbColor={sendDailyCroak ? '#fff' : '#f4f3f4'}
         />
       </View>
+
+      <View style={styles.settingItem}>
+        <Text style={styles.settingLabel}>End of Day</Text>
+        <Pressable onPress={handleOpenTimePicker} style={styles.timeButton}>
+          <Text style={styles.timeText}>{formatTime(endOfDay)}</Text>
+        </Pressable>
+      </View>
+
+      <Modal
+        visible={showTimePicker}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select End of Day Time</Text>
+            <DateTimePicker
+              value={tempTime}
+              mode="time"
+              is24Hour={false}
+              display="spinner"
+              onChange={handleTimeChange}
+              style={styles.timePicker}
+              textColor="#fff"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={handleCancelTime}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.confirmButton]} 
+                onPress={handleConfirmTime}
+              >
+                <Text style={styles.confirmButtonText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
@@ -125,6 +199,73 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     color: '#fff',
+  },
+  timeButton: {
+    backgroundColor: '#1E1E1E',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  timeText: {
+    color: '#4CAF50',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  modalTitle: {
+    fontSize: 18,
+    color: '#fff',
+    marginBottom: 20,
+    fontWeight: '500',
+  },
+  timePicker: {
+    height: 200,
+    width: '100%',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#333',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
   footer: {
     position: 'absolute',
