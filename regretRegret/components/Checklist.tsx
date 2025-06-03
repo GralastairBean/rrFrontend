@@ -122,8 +122,9 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     marginBottom: 20,
+    width: '100%',
   },
   input: {
     flex: 1,
@@ -133,12 +134,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 15,
     fontSize: 16,
-    marginRight: 10,
     backgroundColor: '#1E1E1E',
     color: '#fff',
+    marginRight: 15,
   },
   addButton: {
-    width: 48,
+    width: 80,
     height: 48,
     backgroundColor: '#4CAF50',
     borderRadius: 8,
@@ -152,12 +153,12 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: '#121212',
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
   },
   list: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
   regretItem: {
     backgroundColor: '#1E1E1E',
