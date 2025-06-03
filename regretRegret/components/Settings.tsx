@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image } from 'react-native';
 import { useState } from 'react';
 
 interface SettingsProps {
@@ -36,7 +36,14 @@ export default function Settings({ username, onLogout }: SettingsProps) {
 
       <View style={styles.userInfo}>
         <Text style={styles.label}>Username</Text>
-        <Text style={styles.username}>{username}</Text>
+        <View style={styles.usernameContainer}>
+          <Image 
+            source={require('../assets/user_1.png')}
+            style={styles.userIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.username}>{username}</Text>
+        </View>
       </View>
 
       <View style={styles.settingItem}>
@@ -88,6 +95,17 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 5,
     textAlign: 'center',
+  },
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    tintColor: '#4CAF50',
   },
   username: {
     fontSize: 18,
