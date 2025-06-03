@@ -220,8 +220,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   frogImage: {
-    width: 50,
-    height: 50,
+    width: 45,
+    height: 45,
     marginRight: 15,
   },
   textInfo: {
