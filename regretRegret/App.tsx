@@ -11,6 +11,25 @@ import Layout from './components/Layout';
 import { Screen } from './components/types';
 import { Regret } from './api/types';
 
+export const getRegretIndexColor = (value: number) => {
+  if (value <= 0) return '#4CAF50';  // Green
+  if (value >= 100) return '#f44336'; // Red
+  
+  if (value <= 25) {
+    // Green to Light Green
+    return '#8BC34A';
+  } else if (value <= 50) {
+    // Light Green to Yellow
+    return '#FFEB3B';
+  } else if (value <= 75) {
+    // Yellow to Orange
+    return '#FF9800';
+  } else {
+    // Orange to Red
+    return '#FF5722';
+  }
+};
+
 export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -83,25 +102,6 @@ export default function App() {
     setRegrets(updatedRegrets);
   };
 
-  const getRegretIndexColor = (value: number) => {
-    if (value <= 0) return '#4CAF50';  // Green
-    if (value >= 100) return '#f44336'; // Red
-    
-    if (value <= 25) {
-      // Green to Light Green
-      return '#8BC34A';
-    } else if (value <= 50) {
-      // Light Green to Yellow
-      return '#FFEB3B';
-    } else if (value <= 75) {
-      // Yellow to Orange
-      return '#FF9800';
-    } else {
-      // Orange to Red
-      return '#FF5722';
-    }
-  };
-
   const calculateRegretIndex = () => {
     if (regrets.length === 0) return 100;
     const uncompletedCount = regrets.filter(r => !r.success).length;
@@ -125,6 +125,8 @@ export default function App() {
   }
 
   const renderCurrentScreen = () => {
+    const regretIndex = calculateRegretIndex();
+    
     switch (currentScreen) {
       case 'settings':
         return (
@@ -134,11 +136,10 @@ export default function App() {
           />
         );
       case 'history':
-        return <RegretHistory />;
+        return <RegretHistory currentRegretIndex={regretIndex} />;
       case 'network':
         return <Network />;
       default:
-        const regretIndex = calculateRegretIndex();
         return (
           <View style={styles.mainContent}>
             <View style={styles.header}>
