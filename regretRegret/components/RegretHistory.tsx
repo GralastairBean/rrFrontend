@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TextStyle } from 'react-native';
 import { useState, useEffect } from 'react';
 import { getRegretIndexColor } from '../App';
 
@@ -22,6 +22,11 @@ const formatDate = (date: Date) => {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   
   return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+};
+
+const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
+  if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
+  return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
 };
 
 export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps) {
@@ -63,14 +68,17 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
       </View>
 
       <ScrollView style={styles.content}>
-        {historyData.map((day, index) => (
-          <View key={index} style={styles.dayItem}>
-            <Text style={styles.dateText}>{formatDate(day.date)}</Text>
-            <Text style={[styles.indexText, { color: getRegretIndexColor(day.regretIndex) }]}>
-              {day.regretIndex}%
-            </Text>
-          </View>
-        ))}
+        {historyData.map((day, index) => {
+          const { text, color, style } = formatRegretIndex(day.regretIndex);
+          return (
+            <View key={index} style={styles.dayItem}>
+              <Text style={styles.dateText}>{formatDate(day.date)}</Text>
+              <Text style={[styles.indexText, { color }, style]}>
+                {text}
+              </Text>
+            </View>
+          );
+        })}
       </ScrollView>
     </View>
   );

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, Image } from 'react-native';
+import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, Image, TextStyle } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
 import { authService } from './api/services/authService';
@@ -103,9 +103,14 @@ export default function App() {
   };
 
   const calculateRegretIndex = () => {
-    if (regrets.length === 0) return 100;
+    if (regrets.length === 0) return -1; // Special value to indicate no items
     const uncompletedCount = regrets.filter(r => !r.success).length;
     return Math.round((uncompletedCount / regrets.length) * 100);
+  };
+
+  const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
+    if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
+    return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
   };
 
   // Show loading state
@@ -154,9 +159,14 @@ export default function App() {
               />
               <View style={styles.textInfo}>
                 <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
-                <Text style={[styles.subtitle, { color: getRegretIndexColor(regretIndex) }]}>
-                  Regret Index: {regretIndex}%
-                </Text>
+                {(() => {
+                  const { text, color, style } = formatRegretIndex(regretIndex);
+                  return (
+                    <Text style={[styles.subtitle, { color }, style]}>
+                      Regret Index: {text}
+                    </Text>
+                  );
+                })()}
               </View>
             </View>
 
