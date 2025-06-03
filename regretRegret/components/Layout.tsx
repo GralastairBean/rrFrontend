@@ -1,5 +1,5 @@
 import { StyleSheet, View, TouchableOpacity, Image } from 'react-native';
-import { Screen } from '../types';
+import { Screen } from './types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,6 +8,13 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, currentScreen, setCurrentScreen }: LayoutProps) {
+  const getIconStyle = (screen: Screen) => {
+    return [
+      styles.iconImage,
+      currentScreen === screen && styles.activeIcon
+    ];
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -23,7 +30,7 @@ export default function Layout({ children, currentScreen, setCurrentScreen }: La
           >
             <Image 
               source={require('../assets/home_1.png')}
-              style={styles.iconImage}
+              style={getIconStyle('main')}
               resizeMode="contain"
             />
           </TouchableOpacity>
@@ -34,7 +41,7 @@ export default function Layout({ children, currentScreen, setCurrentScreen }: La
           >
             <Image 
               source={require('../assets/network_1.png')}
-              style={styles.iconImage}
+              style={getIconStyle('network')}
               resizeMode="contain"
             />
           </TouchableOpacity>
@@ -45,7 +52,7 @@ export default function Layout({ children, currentScreen, setCurrentScreen }: La
           >
             <Image 
               source={require('../assets/graph_1.png')}
-              style={styles.iconImage}
+              style={getIconStyle('history')}
               resizeMode="contain"
             />
           </TouchableOpacity>
@@ -56,7 +63,7 @@ export default function Layout({ children, currentScreen, setCurrentScreen }: La
           >
             <Image 
               source={require('../assets/settings_1.png')}
-              style={styles.iconImage}
+              style={getIconStyle('settings')}
               resizeMode="contain"
             />
           </TouchableOpacity>
@@ -106,5 +113,9 @@ const styles = StyleSheet.create({
   iconImage: {
     width: 37,
     height: 37,
+    tintColor: '#888',
+  },
+  activeIcon: {
+    tintColor: '#4CAF50',
   },
 }); 
