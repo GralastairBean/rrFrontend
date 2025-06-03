@@ -161,12 +161,23 @@ export default function App() {
         <View style={styles.separator} />
         <View style={styles.iconRow}>
           <TouchableOpacity 
-            style={[styles.iconButton, styles.userIconButton]}
+            style={styles.iconButton}
+            onPress={() => setCurrentScreen('main')}
+          >
+            <Image 
+              source={require('./assets/home_1.png')}
+              style={styles.iconImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.iconButton}
             onPress={() => setCurrentScreen('network')}
           >
             <Image 
               source={require('./assets/network_1.png')}
-              style={[styles.iconImage, styles.userIconImage]}
+              style={styles.iconImage}
               resizeMode="contain"
             />
           </TouchableOpacity>
@@ -214,8 +225,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingBottom: 30,
-    paddingTop: 20,
+    paddingBottom: 20,
     alignItems: 'center',
     backgroundColor: '#121212',
   },
@@ -270,9 +280,10 @@ const styles = StyleSheet.create({
   },
   iconRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 30,
+    alignItems: 'center',
   },
   iconButton: {
     width: 62,
@@ -283,13 +294,5 @@ const styles = StyleSheet.create({
   iconImage: {
     width: 37,
     height: 37,
-  },
-  userIconButton: {
-    width: 56,
-    height: 56,
-  },
-  userIconImage: {
-    width: 33,
-    height: 33,
   },
 });
