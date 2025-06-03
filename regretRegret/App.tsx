@@ -143,7 +143,7 @@ export default function App() {
       case 'history':
         return <RegretHistory currentRegretIndex={regretIndex} />;
       case 'network':
-        return <Network />;
+        return <Network currentRegretIndex={regretIndex} />;
       default:
         return (
           <View style={styles.mainContent}>
