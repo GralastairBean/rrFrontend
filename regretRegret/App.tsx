@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
 import { authService } from './api/services/authService';
@@ -7,9 +7,9 @@ import Checklist from './components/Checklist';
 import Settings from './components/Settings';
 import RegretHistory from './components/RegretHistory';
 import Network from './components/Network';
+import Layout from './components/Layout';
+import { Screen } from './components/types';
 import { Regret } from './api/types';
-
-type Screen = 'main' | 'settings' | 'history' | 'network';
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -105,106 +105,49 @@ export default function App() {
     return <Registration onRegistrationComplete={handleRegistrationComplete} />;
   }
 
-  // Show settings screen
-  if (currentScreen === 'settings') {
-    return (
-      <Settings 
-        onBack={() => setCurrentScreen('main')} 
-        username={username}
-        onLogout={handleLogout}
-      />
-    );
-  }
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
+      case 'settings':
+        return (
+          <Settings 
+            username={username}
+            onLogout={handleLogout}
+          />
+        );
+      case 'history':
+        return <RegretHistory />;
+      case 'network':
+        return <Network />;
+      default:
+        return (
+          <View style={styles.mainContent}>
+            <View style={styles.headerCenter}>
+              <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
+              <View style={styles.titleContainer}>
+                <Image 
+                  source={require('./assets/frog_2.jpeg')}
+                  style={styles.frogImage}
+                  resizeMode="contain"
+                />
+                <Text style={styles.title}>Regret Regret</Text>
+              </View>
+              <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
+            </View>
+            <Checklist onRegretsUpdate={handleRegretsUpdate} />
+          </View>
+        );
+    }
+  };
 
-  // Show history screen
-  if (currentScreen === 'history') {
-    return (
-      <RegretHistory 
-        onBack={() => setCurrentScreen('main')}
-      />
-    );
-  }
-
-  // Show network screen
-  if (currentScreen === 'network') {
-    return (
-      <Network 
-        onBack={() => setCurrentScreen('main')}
-      />
-    );
-  }
-
-  // Show main checklist if authenticated
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <StatusBar style="light" />
-      <View style={styles.mainContent}>
-        <View style={styles.headerCenter}>
-          <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
-          <View style={styles.titleContainer}>
-            <Image 
-              source={require('./assets/frog_2.jpeg')}
-              style={styles.frogImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.title}>Regret Regret</Text>
-          </View>
-          <Text style={styles.subtitle}>Regret Index: {calculateRegretIndex()}%</Text>
-        </View>
-        <Checklist onRegretsUpdate={handleRegretsUpdate} />
-      </View>
-      
-      <View style={styles.bottomSection}>
-        <View style={styles.separator} />
-        <View style={styles.iconRow}>
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setCurrentScreen('main')}
-          >
-            <Image 
-              source={require('./assets/home_1.png')}
-              style={styles.iconImage}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setCurrentScreen('network')}
-          >
-            <Image 
-              source={require('./assets/network_1.png')}
-              style={styles.iconImage}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setCurrentScreen('history')}
-          >
-            <Image 
-              source={require('./assets/graph_1.png')}
-              style={styles.iconImage}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setCurrentScreen('settings')}
-          >
-            <Image 
-              source={require('./assets/settings_1.png')}
-              style={styles.iconImage}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Layout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>
+        {renderCurrentScreen()}
+      </Layout>
     </KeyboardAvoidingView>
   );
 }
@@ -213,40 +156,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
-    paddingTop: 60,
-  },
-  mainContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-  },
-  bottomSection: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingBottom: 20,
-    alignItems: 'center',
-    backgroundColor: '#121212',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#333',
-    width: '100%',
-    marginBottom: 20,
-  },
-  headerCenter: {
-    alignItems: 'center',
   },
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  mainContent: {
+    flex: 1,
+    paddingTop: 60,
     paddingHorizontal: 20,
-    marginBottom: 20,
+  },
+  headerCenter: {
+    alignItems: 'center',
   },
   titleContainer: {
     flexDirection: 'row',
@@ -277,22 +198,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginBottom: 20,
-  },
-  iconRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 30,
-    alignItems: 'center',
-  },
-  iconButton: {
-    width: 62,
-    height: 62,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconImage: {
-    width: 37,
-    height: 37,
   },
 });

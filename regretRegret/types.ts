@@ -1,0 +1,1 @@
+export type Screen = 'main' | 'settings' | 'history' | 'network'; 

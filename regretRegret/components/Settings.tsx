@@ -2,12 +2,11 @@ import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert } from 'react-n
 import { useState } from 'react';
 
 interface SettingsProps {
-  onBack: () => void;
   username: string;
   onLogout: () => void;
 }
 
-export default function Settings({ onBack, username, onLogout }: SettingsProps) {
+export default function Settings({ username, onLogout }: SettingsProps) {
   const [testEnabled, setTestEnabled] = useState(false);
 
   const handleLogoutPress = () => {
@@ -16,7 +15,7 @@ export default function Settings({ onBack, username, onLogout }: SettingsProps) 
       'Are you sure you want to delete your account? This action is irreversable and will erase your regret history.',
       [
         {
-          text: 'Go Back',
+          text: 'Cancel',
           style: 'cancel',
         },
         {
@@ -32,33 +31,28 @@ export default function Settings({ onBack, username, onLogout }: SettingsProps) 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
         <Text style={styles.title}>Settings</Text>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.userInfo}>
-          <Text style={styles.label}>Username</Text>
-          <Text style={styles.username}>{username}</Text>
-        </View>
+      <View style={styles.userInfo}>
+        <Text style={styles.label}>Username</Text>
+        <Text style={styles.username}>{username}</Text>
+      </View>
 
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>Test</Text>
-          <Switch
-            value={testEnabled}
-            onValueChange={setTestEnabled}
-            trackColor={{ false: '#333', true: '#4CAF50' }}
-            thumbColor={testEnabled ? '#fff' : '#f4f3f4'}
-          />
-        </View>
+      <View style={styles.settingItem}>
+        <Text style={styles.settingLabel}>Test</Text>
+        <Switch
+          value={testEnabled}
+          onValueChange={setTestEnabled}
+          trackColor={{ false: '#333', true: '#4CAF50' }}
+          thumbColor={testEnabled ? '#fff' : '#f4f3f4'}
+        />
+      </View>
 
-        <View style={styles.deleteSection}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
-            <Text style={styles.logoutButtonText}>Delete Account</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
+          <Text style={styles.logoutButtonText}>Delete Account</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -71,22 +65,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 30,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  backButton: {
-    padding: 10,
-    marginRight: 10,
-  },
-  backButtonText: {
-    color: '#4CAF50',
-    fontSize: 24,
   },
   title: {
     fontSize: 28,
@@ -94,6 +74,7 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
   },
   userInfo: {
+    paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
@@ -113,6 +94,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
@@ -121,15 +103,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  deleteSection: {
-    marginTop: 40,
-    alignItems: 'center',
+  footer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
   },
   logoutButton: {
     backgroundColor: '#ff4444',
     paddingVertical: 15,
     borderRadius: 8,
-    width: '100%',
     alignItems: 'center',
   },
   logoutButtonText: {

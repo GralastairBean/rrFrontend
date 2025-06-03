@@ -1,16 +1,9 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-interface NetworkProps {
-  onBack: () => void;
-}
-
-export default function Network({ onBack }: NetworkProps) {
+export default function Network() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
         <Text style={styles.title}>Network</Text>
       </View>
 
@@ -26,18 +19,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 20,
-  },
-  backButton: {
-    padding: 10,
-    marginRight: 10,
-  },
-  backButtonText: {
-    color: '#4CAF50',
-    fontSize: 24,
   },
   title: {
     fontSize: 28,
