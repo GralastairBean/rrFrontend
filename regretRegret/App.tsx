@@ -155,7 +155,7 @@ export default function App() {
             onPress={() => {/* TODO: Handle user press */}}
           >
             <Image 
-              source={require('./assets/user_1.png')}
+              source={require('./assets/network_1.png')}
               style={[styles.iconImage, styles.userIconImage]}
               resizeMode="contain"
             />
