@@ -12,15 +12,15 @@ export default function Settings({ onBack, username, onLogout }: SettingsProps) 
 
   const handleLogoutPress = () => {
     Alert.alert(
-      'Confirm Logout',
-      'Are you sure you want to log out?',
+      'Delete Account',
+      'Are you sure you want to delete your account? This action is irreversable and will erase your regret history.',
       [
         {
           text: 'Go Back',
           style: 'cancel',
         },
         {
-          text: 'Yes',
+          text: 'Yes, Delete',
           onPress: onLogout,
           style: 'destructive',
         },
@@ -38,25 +38,27 @@ export default function Settings({ onBack, username, onLogout }: SettingsProps) 
         <Text style={styles.title}>Settings</Text>
       </View>
 
-      <View style={styles.userInfo}>
-        <Text style={styles.label}>Username</Text>
-        <Text style={styles.username}>{username}</Text>
-      </View>
+      <View style={styles.content}>
+        <View style={styles.userInfo}>
+          <Text style={styles.label}>Username</Text>
+          <Text style={styles.username}>{username}</Text>
+        </View>
 
-      <View style={styles.settingItem}>
-        <Text style={styles.settingLabel}>Test</Text>
-        <Switch
-          value={testEnabled}
-          onValueChange={setTestEnabled}
-          trackColor={{ false: '#333', true: '#4CAF50' }}
-          thumbColor={testEnabled ? '#fff' : '#f4f3f4'}
-        />
-      </View>
+        <View style={styles.settingItem}>
+          <Text style={styles.settingLabel}>Test</Text>
+          <Switch
+            value={testEnabled}
+            onValueChange={setTestEnabled}
+            trackColor={{ false: '#333', true: '#4CAF50' }}
+            thumbColor={testEnabled ? '#fff' : '#f4f3f4'}
+          />
+        </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
-          <Text style={styles.logoutButtonText}>Log Out</Text>
-        </TouchableOpacity>
+        <View style={styles.deleteSection}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
+            <Text style={styles.logoutButtonText}>Delete Account</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -74,6 +76,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 30,
   },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
   backButton: {
     padding: 10,
     marginRight: 10,
@@ -88,7 +94,6 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
   },
   userInfo: {
-    paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
@@ -108,7 +113,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
@@ -117,17 +121,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  footer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
+  deleteSection: {
+    marginTop: 40,
+    alignItems: 'center',
   },
   logoutButton: {
     backgroundColor: '#ff4444',
     paddingVertical: 15,
     borderRadius: 8,
+    width: '100%',
     alignItems: 'center',
   },
   logoutButtonText: {
