@@ -173,13 +173,20 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
+        // Clear the old access token before refreshing
+        delete api.defaults.headers.common['Authorization'];
+        
         const newToken = await authService.refreshToken();
         if (newToken && originalRequest.headers) {
+          // Update the request headers with new token
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          // Ensure the base request also has the new token
+          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
         // If refresh fails, clear auth and handle the error
+        console.error('Token refresh failed:', refreshError);
         await authService.clearAuth();
         return Promise.reject(handleApiError(refreshError, undefined, false));
       }

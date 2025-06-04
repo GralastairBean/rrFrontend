@@ -69,24 +69,34 @@ export const authService = {
   },
 
   async refreshToken(): Promise<string | null> {
-    const refresh = await this.getRefreshToken();
-    if (!refresh) return null;
-
     try {
-      const response = await publicApi.post<TokenObtainPairResponse>('/auth/jwt/refresh/', { refresh });
-      const { access } = response.data;
-      if (!access) {
-        throw new Error('No access token received from refresh');
+      const refresh = await this.getRefreshToken();
+      if (!refresh) {
+        console.log('No refresh token available');
+        await this.clearAuth();
+        return null;
       }
-      await SecureStore.setItemAsync(TOKEN_KEY, access);
+
+      console.log('Attempting to refresh access token');
+      const response = await publicApi.post<TokenObtainPairResponse>('/auth/jwt/refresh/', { refresh });
+      
+      if (!response.data.access) {
+        console.error('No access token received from refresh');
+        await this.clearAuth();
+        return null;
+      }
+
+      // Store the new access token
+      await SecureStore.setItemAsync(TOKEN_KEY, response.data.access);
       
       // Update the API client headers with the new token
-      api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
       
-      return access;
+      console.log('Successfully refreshed access token');
+      return response.data.access;
     } catch (error: unknown) {
       console.error('Token refresh failed:', error);
-      // If refresh fails, clear auth and force re-registration
+      // If refresh fails, clear all auth data to ensure clean state
       await this.clearAuth();
       return null;
     }
@@ -153,16 +163,22 @@ export const authService = {
 
   async clearAuth(): Promise<void> {
     console.log('Clearing authentication data...');
-    // Clear the stored tokens
-    await AsyncStorage.multiRemove([
-      TOKEN_KEY,
-      REFRESH_TOKEN_KEY,
-      USERNAME_KEY
-    ]);
+    try {
+      // Clear the stored tokens
+      await Promise.all([
+        SecureStore.deleteItemAsync(TOKEN_KEY),
+        SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+        SecureStore.deleteItemAsync(USERNAME_KEY)
+      ]);
 
-    // Clear the API client headers
-    delete api.defaults.headers.common['Authorization'];
-    console.log('Authentication data cleared');
+      // Clear the API client headers
+      delete api.defaults.headers.common['Authorization'];
+      console.log('Authentication data cleared successfully');
+    } catch (error) {
+      console.error('Error clearing auth data:', error);
+      // Even if there's an error, still remove the Authorization header
+      delete api.defaults.headers.common['Authorization'];
+    }
   },
 
   async logout(): Promise<void> {
