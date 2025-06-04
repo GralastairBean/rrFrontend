@@ -3,10 +3,14 @@ import { api, publicApi } from '../config';
 import type { TokenObtainPairResponse, User } from '../types';
 import type { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwt_decode from 'jwt-decode';
 
 const TOKEN_KEY = 'auth.token';
 const REFRESH_TOKEN_KEY = 'auth.refresh_token';
 const USERNAME_KEY = 'auth.username';
+// Refresh token 1 minute before expiry
+const REFRESH_THRESHOLD = 60 * 1000;
+let refreshTimeout: NodeJS.Timeout | null = null;
 
 export const authService = {
   async register(username: string): Promise<void> {
@@ -55,6 +59,50 @@ export const authService = {
     }
   },
 
+  scheduleTokenRefresh(token: string) {
+    try {
+      // Clear any existing refresh timeout
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+        refreshTimeout = null;
+      }
+
+      // Decode the JWT to get expiration time
+      const decoded = jwt_decode<{ exp: number }>(token);
+      if (!decoded.exp) {
+        console.warn('No expiration found in token');
+        return;
+      }
+
+      // Calculate when the token expires
+      const expiresAt = decoded.exp * 1000; // Convert to milliseconds
+      const now = Date.now();
+      
+      // Calculate when we should refresh (threshold before expiry)
+      const refreshAt = expiresAt - REFRESH_THRESHOLD;
+      const timeUntilRefresh = refreshAt - now;
+
+      console.log('Token refresh scheduled:', {
+        expiresAt: new Date(expiresAt).toISOString(),
+        refreshAt: new Date(refreshAt).toISOString(),
+        timeUntilRefresh: Math.round(timeUntilRefresh / 1000) + ' seconds'
+      });
+
+      // Only schedule refresh if token isn't already expired
+      if (timeUntilRefresh > 0) {
+        refreshTimeout = setTimeout(async () => {
+          console.log('Proactively refreshing token...');
+          await this.refreshToken();
+        }, timeUntilRefresh);
+      } else {
+        console.warn('Token is already expired or too close to expiry');
+        this.refreshToken(); // Refresh immediately if token is expired
+      }
+    } catch (error) {
+      console.error('Error scheduling token refresh:', error);
+    }
+  },
+
   async storeAuthData(tokens: TokenObtainPairResponse, username: string): Promise<void> {
     if (!tokens.access || !tokens.refresh || !username) {
       throw new Error('Missing required data for storage');
@@ -66,6 +114,9 @@ export const authService = {
       SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refresh),
       SecureStore.setItemAsync(USERNAME_KEY, username)
     ]);
+
+    // Schedule refresh for the new token
+    this.scheduleTokenRefresh(tokens.access);
   },
 
   async refreshToken(): Promise<string | null> {
@@ -91,6 +142,9 @@ export const authService = {
       
       // Update the API client headers with the new token
       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
+      
+      // Schedule the next refresh
+      this.scheduleTokenRefresh(response.data.access);
       
       console.log('Successfully refreshed access token');
       return response.data.access;
@@ -164,6 +218,12 @@ export const authService = {
   async clearAuth(): Promise<void> {
     console.log('Clearing authentication data...');
     try {
+      // Clear any scheduled refresh
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+        refreshTimeout = null;
+      }
+
       // Clear the stored tokens
       await Promise.all([
         SecureStore.deleteItemAsync(TOKEN_KEY),
