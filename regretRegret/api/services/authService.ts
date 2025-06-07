@@ -3,7 +3,7 @@ import { api, publicApi } from '../config';
 import type { TokenObtainPairResponse, User } from '../types';
 import type { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import jwt_decode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 const TOKEN_KEY = 'auth.token';
 const REFRESH_TOKEN_KEY = 'auth.refresh_token';
@@ -68,7 +68,7 @@ export const authService = {
       }
 
       // Decode the JWT to get expiration time
-      const decoded = jwt_decode<{ exp: number }>(token);
+      const decoded = jwtDecode<{ exp: number }>(token);
       if (!decoded.exp) {
         console.warn('No expiration found in token');
         return;
