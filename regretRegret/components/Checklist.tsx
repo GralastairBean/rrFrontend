@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Dimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useChecklist } from '../hooks/useChecklist';
 import { Regret } from '../api/types';
 import ParticleSystem from './ParticleSystem';
+import RegretConfirmationModal from './RegretConfirmationModal';
 
 interface ChecklistProps {
   onRegretsUpdate?: (regrets: Regret[]) => void;
@@ -16,24 +18,50 @@ const RegretItem = memo(({
   onToggle: (id: number, success: boolean) => void;
 }) => {
   const [showParticles, setShowParticles] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const checkboxRef = useRef<View>(null);
 
-  const handleToggle = useCallback(() => {
-    if (!item.success) {
+  const handleToggleAttempt = useCallback(async () => {
+    if (item.success) return;
+
+    try {
+      const hasSeenConfirmation = await AsyncStorage.getItem('hasSeenRegretConfirmation');
+      if (!hasSeenConfirmation) {
+        setShowConfirmation(true);
+      } else {
+        handleConfirmedToggle();
+      }
+    } catch (error) {
+      console.error('Failed to check confirmation status:', error);
+      // Fallback to showing confirmation
+      setShowConfirmation(true);
+    }
+  }, [item.success]);
+
+  const handleConfirmedToggle = useCallback(async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenRegretConfirmation', 'true');
+      setShowConfirmation(false);
       setShowParticles(true);
       onToggle(item.id, item.success);
       setTimeout(() => {
         setShowParticles(false);
       }, 2000);
+    } catch (error) {
+      console.error('Failed to save confirmation status:', error);
     }
   }, [item.id, item.success, onToggle]);
+
+  const handleCancelToggle = () => {
+    setShowConfirmation(false);
+  };
 
   return (
     <View style={styles.regretItem}>
       <View style={styles.contentContainer}>
         <View style={styles.checkboxContainer}>
           <TouchableOpacity 
-            onPress={handleToggle}
+            onPress={handleToggleAttempt}
             disabled={item.success}
           >
             <View
@@ -58,6 +86,11 @@ const RegretItem = memo(({
           item.success && styles.completedRegret
         ]}>{item.description}</Text>
       </View>
+      <RegretConfirmationModal
+        visible={showConfirmation}
+        onConfirm={handleConfirmedToggle}
+        onCancel={handleCancelToggle}
+      />
     </View>
   );
 });

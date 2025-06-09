@@ -108,6 +108,7 @@ export default function App() {
     try {
       await authService.logout();
       await AsyncStorage.removeItem('hasSeenWelcome');
+      await AsyncStorage.removeItem('hasSeenRegretConfirmation');
       setIsAuthenticated(false);
       setUsername('');
       setCurrentScreen('main');
