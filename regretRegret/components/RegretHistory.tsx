@@ -25,6 +25,11 @@ const formatDate = (date: Date) => {
   return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
 };
 
+const isWeekend = (date: Date) => {
+  const day = date.getDay();
+  return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
+};
+
 const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
   if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
   return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
@@ -47,8 +52,8 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         regretIndex: currentRegretIndex
       });
 
-      // Add last 24 days with random indices (25 days total including today)
-      for (let i = 1; i <= 24; i++) {
+      // Add last 29 days with random indices (30 days total including today)
+      for (let i = 1; i <= 29; i++) {
         const date = new Date();
         date.setDate(today.getDate() - i);
         data.push({
@@ -67,15 +72,35 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: themeColors.primary }]}>Regret Index History</Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Last 25 Days</Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Last 30 Days</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {historyData.map((day, index) => {
           const { text, color, style } = formatRegretIndex(day.regretIndex);
+          const isWeekendDay = isWeekend(day.date);
           return (
-            <View key={index} style={[styles.dayItem, { borderBottomColor: themeColors.border }]}>
-              <Text style={[styles.dateText, { color: themeColors.text }]}>{formatDate(day.date)}</Text>
+            <View 
+              key={index} 
+              style={[
+                styles.dayItem, 
+                { 
+                  borderBottomColor: themeColors.border,
+                  backgroundColor: isWeekendDay 
+                    ? theme === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.03)' // Slightly lighter in dark mode
+                      : 'rgba(0, 0, 0, 0.02)' // Slightly darker in light mode
+                    : 'transparent'
+                }
+              ]}
+            >
+              <Text style={[
+                styles.dateText, 
+                { color: themeColors.text },
+                isWeekendDay && styles.weekendText
+              ]}>
+                {formatDate(day.date)}
+              </Text>
               <Text style={[styles.indexText, { color }, style]}>
                 {text}
               </Text>
@@ -115,10 +140,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
+    borderRadius: 4,
   },
   dateText: {
     fontSize: 14,
+  },
+  weekendText: {
+    fontWeight: '500',
   },
   indexText: {
     fontSize: 14,
