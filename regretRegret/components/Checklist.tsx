@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Dimensions } from 'react-native';
 import { useChecklist } from '../hooks/useChecklist';
 import { Regret } from '../api/types';
+import ParticleSystem from './ParticleSystem';
 
 interface ChecklistProps {
   onRegretsUpdate?: (regrets: Regret[]) => void;
@@ -13,24 +14,53 @@ const RegretItem = memo(({
 }: { 
   item: Regret; 
   onToggle: (id: number, success: boolean) => void;
-}) => (
-  <View style={styles.regretItem}>
-    <TouchableOpacity 
-      style={[
-        styles.checkbox,
-        item.success && styles.checkboxDisabled
-      ]} 
-      onPress={() => onToggle(item.id, item.success)}
-      disabled={item.success}
-    >
-      {item.success && <Text style={styles.checkmark}>✓</Text>}
-    </TouchableOpacity>
-    <Text style={[
-      styles.regretText,
-      item.success && styles.completedRegret
-    ]}>{item.description}</Text>
-  </View>
-));
+}) => {
+  const [showParticles, setShowParticles] = useState(false);
+  const checkboxRef = useRef<View>(null);
+
+  const handleToggle = useCallback(() => {
+    if (!item.success) {
+      setShowParticles(true);
+      onToggle(item.id, item.success);
+      setTimeout(() => {
+        setShowParticles(false);
+      }, 2000);
+    }
+  }, [item.id, item.success, onToggle]);
+
+  return (
+    <View style={styles.regretItem}>
+      <View style={styles.contentContainer}>
+        <View style={styles.checkboxContainer}>
+          <TouchableOpacity 
+            onPress={handleToggle}
+            disabled={item.success}
+          >
+            <View
+              ref={checkboxRef}
+              style={[
+                styles.checkbox,
+                item.success && styles.checkboxDisabled
+              ]}
+            >
+              {item.success && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+          </TouchableOpacity>
+          {showParticles && (
+            <ParticleSystem
+              count={20}
+              color="#4CAF50"
+            />
+          )}
+        </View>
+        <Text style={[
+          styles.regretText,
+          item.success && styles.completedRegret
+        ]}>{item.description}</Text>
+      </View>
+    </View>
+  );
+});
 
 const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
   const [newRegret, setNewRegret] = useState('');
@@ -58,7 +88,6 @@ const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
   }, [newRegret, createRegret, isSubmitting]);
 
   const handleToggleRegret = useCallback(async (regretId: number, currentSuccess: boolean) => {
-    // Only allow toggling if the regret is not already successful
     if (!currentSuccess) {
       await toggleRegretSuccess(regretId);
     }
@@ -195,8 +224,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#333',
+  },
+  contentContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  checkboxContainer: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+    marginRight: 10,
   },
   checkbox: {
     width: 24,
@@ -204,7 +241,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#4CAF50',
-    marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
