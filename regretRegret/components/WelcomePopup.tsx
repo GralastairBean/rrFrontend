@@ -16,9 +16,9 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ visible, onClose }) => {
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          <Text style={styles.title}>Welcome to Regret Regret</Text>
+          <Text style={styles.title}>Regret Regret is Permanent</Text>
           <Text style={styles.message}>
-            To begin, add a regret to your checklist. Think carefully, you cannot remove or edit regrets once they are added
+            To begin, enter your first regret, but be warned, in order to avoid regret manipulation you cannot edit or delete a regret. Enter your daily regret list thoughtfully!
           </Text>
           <TouchableOpacity
             style={styles.button}
