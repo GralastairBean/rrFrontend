@@ -12,14 +12,10 @@ export const authService = {
   async register(username: string): Promise<void> {
     try {
       console.log('🔐 Starting registration for username:', username);
-      console.log('🌐 API base URL:', publicApi.defaults.baseURL);
       
       const response = await publicApi.post<User>('/auth/user/', {
         username: username.trim()
       });
-      
-      console.log('✅ Registration successful. Status:', response.status);
-      console.log('🔑 Tokens received:', response.data?.tokens ? 'Yes' : 'No');
       
       if (!response.data?.tokens) {
         throw new Error('No tokens received from registration');
@@ -30,11 +26,9 @@ export const authService = {
         throw new Error('Invalid token format received');
       }
       
-      console.log('💾 Storing auth data...');
       await this.storeAuthData(tokens, username);
-
       api.defaults.headers.common['Authorization'] = `Bearer ${tokens.access}`;
-      console.log('🎉 Registration complete and tokens stored successfully');
+      console.log('✅ Registration complete');
     } catch (error) {
       console.error('❌ Registration failed:', error);
       throw error;
@@ -42,7 +36,6 @@ export const authService = {
   },
 
   async storeAuthData(tokens: TokenObtainPairResponse, username: string): Promise<void> {
-    console.log('💾 Starting token storage...');
     if (!tokens.access || !tokens.refresh || !username) {
       console.error('❌ Missing required data for storage:', {
         hasAccess: !!tokens.access,
@@ -58,7 +51,7 @@ export const authService = {
         SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refresh),
         SecureStore.setItemAsync(USERNAME_KEY, username)
       ]);
-      console.log('✅ Tokens and username stored successfully');
+      console.log('✅ Auth data stored successfully');
     } catch (error) {
       console.error('❌ Failed to store auth data:', error);
       throw error;
@@ -74,7 +67,7 @@ export const authService = {
         return null;
       }
 
-      console.log('🌐 Sending refresh token request...');
+      console.log('🔄 Sending refresh token request...');
       const response = await publicApi.post<TokenObtainPairResponse>('/auth/jwt/refresh/', { refresh });
       
       if (!response.data.access) {
@@ -90,37 +83,29 @@ export const authService = {
           SecureStore.setItemAsync(TOKEN_KEY, response.data.access),
           SecureStore.setItemAsync(REFRESH_TOKEN_KEY, response.data.refresh)
         ]);
-        console.log('💾 Both tokens stored successfully');
       } else {
         console.log('✅ Received new access token only');
         await SecureStore.setItemAsync(TOKEN_KEY, response.data.access);
-        console.log('💾 New access token stored');
       }
 
       const decoded = jwtDecode<{ exp: number }>(response.data.access);
       const expiresAt = decoded.exp * 1000;
       const now = Date.now();
-      console.log('⏰ New access token expires:', {
+      console.log('⏰ Token expires:', {
         expiresAt: new Date(expiresAt).toISOString(),
         timeUntilExpiry: Math.round((expiresAt - now) / 1000) + ' seconds'
       });
       
       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-      console.log('🔑 API headers updated with new token');
-      
-      console.log('🎉 Token refresh completed successfully');
       return response.data.access;
     } catch (error: any) {
-      console.error('❌ Token refresh failed:', error);
-      
-      // Check if token is blacklisted
       if (error?.response?.data?.detail === 'Token is blacklisted') {
         console.log('🚫 Refresh token is blacklisted, need to register again');
         await this.clearAuth();
         return null;
       }
       
-      // For other errors, clear auth and return null
+      console.error('❌ Token refresh failed:', error);
       await this.clearAuth();
       return null;
     }
@@ -162,19 +147,14 @@ export const authService = {
   },
 
   async clearAuth(): Promise<void> {
-    console.log('🧹 Clearing authentication data...');
     try {
       await Promise.all([
         SecureStore.deleteItemAsync(TOKEN_KEY),
         SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
         SecureStore.deleteItemAsync(USERNAME_KEY)
       ]);
-      console.log('✅ Tokens deleted from storage');
-
       delete api.defaults.headers.common['Authorization'];
-      console.log('✅ API headers cleared');
-      
-      console.log('🎉 Authentication data cleared successfully');
+      console.log('✅ Auth data cleared');
     } catch (error) {
       console.error('❌ Error clearing auth data:', error);
       delete api.defaults.headers.common['Authorization'];
@@ -184,7 +164,6 @@ export const authService = {
   async getStoredUsername(): Promise<string | null> {
     try {
       const username = await SecureStore.getItemAsync(USERNAME_KEY);
-      console.log('👤 Retrieved username:', username ? 'exists' : 'null');
       return username;
     } catch (error) {
       console.error('❌ Error retrieving username:', error);
@@ -195,7 +174,6 @@ export const authService = {
   async getAccessToken(): Promise<string | null> {
     try {
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
-      console.log('🔑 Retrieved access token:', token ? 'exists' : 'null');
       if (token) {
         const decoded = jwtDecode<{ exp: number }>(token);
         const expiresAt = decoded.exp * 1000;
@@ -217,7 +195,6 @@ export const authService = {
   async getRefreshToken(): Promise<string | null> {
     try {
       const token = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-      console.log('🔄 Retrieved refresh token:', token ? 'exists' : 'null');
       return token;
     } catch (error) {
       console.error('❌ Error retrieving refresh token:', error);

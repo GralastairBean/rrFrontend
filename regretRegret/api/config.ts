@@ -43,43 +43,24 @@ api.interceptors.request.use(
   async (config) => {
     // Add auth token
     const token = await authService.getAccessToken();
-    
-    // Log the authorization status
-    console.log('🔐 Request authorization status:', {
-      hasToken: !!token,
-      currentAuthHeader: config.headers?.Authorization,
-      url: config.url,
-      method: config.method
-    });
 
     if (!token) {
       console.warn('⚠️ No access token available for request');
-    } else if (!config.headers) {
-      console.warn('⚠️ No headers object in request config');
-      config.headers = new AxiosHeaders();
     }
 
-    // Ensure headers object exists
+    // Ensure headers object exists and set token
     if (!config.headers) {
       config.headers = new AxiosHeaders();
     }
 
-    // Set the authorization header if we have a token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('✅ Authorization header set for request');
     }
-
-    console.log('📤 Outgoing request headers:', {
-      contentType: config.headers['Content-Type'],
-      authorization: config.headers.Authorization ? 'Bearer [token]' : 'none'
-    });
 
     // Convert POST data to FormData
     if (config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
       config.data = convertToFormData(config.data);
       config.headers['Content-Type'] = 'multipart/form-data';
-      console.log('📦 Converted request data to FormData');
     }
 
     return config;
@@ -111,14 +92,6 @@ const handleApiError = (error: unknown, customMessage?: string, showAlert = true
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.error('API request failed:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     if (!originalRequest) return Promise.reject(handleApiError(error, undefined, false));
 
