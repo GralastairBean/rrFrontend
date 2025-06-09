@@ -9,7 +9,7 @@ import { playCheckSound } from '../utils/sound';
 import { useTheme, colors } from '../utils/ThemeContext';
 
 interface ChecklistProps {
-  onRegretsUpdate?: (regrets: Regret[]) => void;
+  onRegretsUpdate?: (regrets: Regret[], isLoading: boolean) => void;
 }
 
 const RegretItem = memo(({ 
@@ -120,9 +120,9 @@ const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
 
   useEffect(() => {
     if (onRegretsUpdate) {
-      onRegretsUpdate(regrets);
+      onRegretsUpdate(regrets, loading);
     }
-  }, [regrets, onRegretsUpdate]);
+  }, [regrets, onRegretsUpdate, loading]);
 
   const handleAddRegret = useCallback(async () => {
     if (newRegret.trim().length === 0 || isSubmitting) return;

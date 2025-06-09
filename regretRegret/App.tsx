@@ -14,7 +14,8 @@ import { Screen } from './components/types';
 import { Regret } from './api/types';
 import { ThemeProvider, useTheme, colors } from './utils/ThemeContext';
 
-export const getRegretIndexColor = (value: number) => {
+export const getRegretIndexColor = (value: number | null) => {
+  if (value === null) return '#121212';  // Default color during loading
   if (value <= 0) return '#4CAF50';  // Green
   if (value >= 100) return '#f44336'; // Red
   
@@ -38,11 +39,20 @@ function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [regrets, setRegrets] = useState<Regret[]>([]);
+  const [checklistLoading, setChecklistLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const [username, setUsername] = useState<string>('');
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const { theme } = useTheme();
   const themeColors = colors[theme];
+
+  // Clear regrets data when changing screens
+  useEffect(() => {
+    if (currentScreen !== 'main') {
+      setRegrets([]);
+      setChecklistLoading(true);
+    }
+  }, [currentScreen]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -132,18 +142,24 @@ function AppContent() {
     return `${day}, ${month} ${dateNum}, ${year}`;
   };
 
-  const handleRegretsUpdate = (updatedRegrets: Regret[]) => {
-    setRegrets(updatedRegrets);
+  const handleRegretsUpdate = (updatedRegrets: Regret[], isLoading: boolean) => {
+    // Only update regrets if we're on the main screen
+    if (currentScreen === 'main') {
+      setRegrets(updatedRegrets);
+      setChecklistLoading(isLoading);
+    }
   };
 
   const calculateRegretIndex = () => {
-    if (regrets.length === 0) return -1; // Special value to indicate no items
+    if (checklistLoading) return -1;
+    if (regrets.length === 0) return -1;
     const uncompletedCount = regrets.filter(r => !r.success).length;
     return Math.round((uncompletedCount / regrets.length) * 100);
   };
 
   const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
-    if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
+    if (checklistLoading) return { text: '', color: themeColors.text, style: {} };
+    if (index === -1 && !checklistLoading) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
     return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
   };
 
@@ -193,14 +209,13 @@ function AppContent() {
               />
               <View style={styles.textInfo}>
                 <Text style={[styles.dateText, { color: themeColors.text }]}>{formatDate(currentDate)}</Text>
-                {(() => {
-                  const { text, color, style } = formatRegretIndex(regretIndex);
-                  return (
-                    <Text style={[styles.subtitle, { color }, style]}>
-                      Regret Index: {text}
+                <View style={styles.regretIndexContainer}>
+                  {currentScreen === 'main' && !checklistLoading && (
+                    <Text style={[styles.subtitle, { color: getRegretIndexColor(calculateRegretIndex()) }]}>
+                      Regret Index: {formatRegretIndex(calculateRegretIndex()).text}
                     </Text>
-                  );
-                })()}
+                  )}
+                </View>
               </View>
             </View>
 
@@ -272,6 +287,10 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     marginBottom: 5,
+  },
+  regretIndexContainer: {
+    minHeight: 24,  // Set a fixed height for the container
+    justifyContent: 'center',
   },
   subtitle: {
     fontSize: 18,
