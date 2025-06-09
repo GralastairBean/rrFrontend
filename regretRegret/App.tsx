@@ -22,8 +22,8 @@ export const getRegretIndexColor = (value: number) => {
     // Green to Light Green
     return '#8BC34A';
   } else if (value <= 50) {
-    // Light Green to Yellow
-    return '#FFEB3B';
+    // Light Green to Yellow - Using a darker yellow for better visibility
+    return '#E6B800';  // Darker yellow
   } else if (value <= 75) {
     // Yellow to Orange
     return '#FF9800';
