@@ -1,36 +1,64 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { checklistService, ChecklistQueryParams } from '../api/services/checklistService';
 import { Checklist, Regret, CreateRegretRequest } from '../api/types';
 
 export const useChecklist = (initialParams?: ChecklistQueryParams) => {
-  const [checklist, setChecklist] = useState<Checklist | null>(null);
-  const [regrets, setRegrets] = useState<Regret[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<{
+    checklist: Checklist | null;
+    regrets: Regret[];
+    loading: boolean;
+    error: string | null;
+  }>({
+    checklist: null,
+    regrets: [],
+    loading: false,
+    error: null
+  });
   const [queryParams, setQueryParams] = useState<ChecklistQueryParams | undefined>(initialParams);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Fetch checklists with optional filters
   const fetchChecklists = useCallback(async (params?: ChecklistQueryParams) => {
     try {
-      setLoading(true);
-      setError(null);
+      setState(prev => ({ ...prev, loading: true, error: null }));
       
       const checklists = await checklistService.getChecklists(params);
-      const firstChecklist = checklists[0]; // Get the first checklist
+      const firstChecklist = checklists[0];
       
       if (firstChecklist) {
-        setChecklist(firstChecklist);
-        
-        // Get regrets for this checklist
         const checklistRegrets = await checklistService.getChecklistRegrets(firstChecklist.id);
-        setRegrets(checklistRegrets);
+        
+        if (isMounted.current) {
+          setState({
+            checklist: firstChecklist,
+            regrets: checklistRegrets,
+            loading: false,
+            error: null
+          });
+        }
       } else {
-        setError('No checklist found');
+        if (isMounted.current) {
+          setState(prev => ({
+            ...prev,
+            loading: false,
+            error: 'No checklist found'
+          }));
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch checklist');
-    } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: err instanceof Error ? err.message : 'Failed to fetch checklist'
+        }));
+      }
     }
   }, []);
 
@@ -42,63 +70,99 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
 
   // Create a new regret
   const createRegret = useCallback(async (description: string) => {
-    if (!checklist) {
-      setError('No active checklist');
+    if (!state.checklist) {
+      setState(prev => ({ ...prev, error: 'No active checklist' }));
       return;
     }
 
     try {
-      setLoading(true);
-      setError(null);
-      
-      const newRegret: CreateRegretRequest = {
-        description
+      // Optimistically add the regret with a temporary ID
+      const tempRegret: Regret = {
+        id: Date.now(), // temporary ID
+        description,
+        created_at: new Date().toISOString(),
+        success: false
       };
       
-      const createdRegret = await checklistService.createRegret(checklist.id, newRegret);
-      setRegrets(prev => [...prev, createdRegret]);
+      setState(prev => ({
+        ...prev,
+        regrets: [...prev.regrets, tempRegret],
+        error: null
+      }));
+      
+      const createdRegret = await checklistService.createRegret(state.checklist.id, {
+        description
+      });
+      
+      if (isMounted.current) {
+        setState(prev => ({
+          ...prev,
+          regrets: prev.regrets.map(r => 
+            r.id === tempRegret.id ? createdRegret : r
+          )
+        }));
+      }
       
       return createdRegret;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create regret');
+      // Remove the optimistically added regret on error
+      if (isMounted.current) {
+        setState(prev => ({
+          ...prev,
+          regrets: prev.regrets.filter(r => r.id !== Date.now()),
+          error: err instanceof Error ? err.message : 'Failed to create regret'
+        }));
+      }
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, [checklist]);
+  }, [state.checklist]);
 
   // Toggle regret success status
   const toggleRegretSuccess = useCallback(async (regretId: number) => {
-    if (!checklist) {
-      setError('No active checklist');
+    if (!state.checklist) {
+      setState(prev => ({ ...prev, error: 'No active checklist' }));
       return;
     }
 
     try {
-      setLoading(true);
-      setError(null);
-      
-      const regret = regrets.find(r => r.id === regretId);
+      const regret = state.regrets.find(r => r.id === regretId);
       if (!regret) {
         throw new Error('Regret not found');
       }
+
+      // Optimistically update the UI
+      setState(prev => ({
+        ...prev,
+        regrets: prev.regrets.map(r =>
+          r.id === regretId ? { ...r, success: !r.success } : r
+        )
+      }));
       
-      const updatedRegret = await checklistService.updateRegret(checklist.id, regretId, {
+      const updatedRegret = await checklistService.updateRegret(state.checklist.id, regretId, {
         success: !regret.success
       });
       
-      setRegrets(prev => prev.map(r => 
-        r.id === regretId ? updatedRegret : r
-      ));
+      if (isMounted.current) {
+        setState(prev => ({
+          ...prev,
+          regrets: prev.regrets.map(r =>
+            r.id === regretId ? updatedRegret : r
+          )
+        }));
+      }
       
       return updatedRegret;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update regret');
+      // Revert the optimistic update on error
+      if (isMounted.current) {
+        setState(prev => ({
+          ...prev,
+          error: err instanceof Error ? err.message : 'Failed to update regret'
+        }));
+      }
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, [checklist, regrets]);
+  }, [state.checklist, state.regrets]);
 
   // Fetch checklist on mount and when query params change
   useEffect(() => {
@@ -106,10 +170,10 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
   }, [fetchChecklists, queryParams]);
 
   return {
-    checklist,
-    regrets,
-    loading,
-    error,
+    checklist: state.checklist,
+    regrets: state.regrets,
+    loading: state.loading,
+    error: state.error,
     createRegret,
     toggleRegretSuccess,
     updateFilters,

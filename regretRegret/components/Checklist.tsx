@@ -1,5 +1,5 @@
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
 import { useChecklist } from '../hooks/useChecklist';
 import { Regret } from '../api/types';
 
@@ -7,8 +7,34 @@ interface ChecklistProps {
   onRegretsUpdate?: (regrets: Regret[]) => void;
 }
 
-export default function Checklist({ onRegretsUpdate }: ChecklistProps) {
+const RegretItem = memo(({ 
+  item, 
+  onToggle 
+}: { 
+  item: Regret; 
+  onToggle: (id: number, success: boolean) => void;
+}) => (
+  <View style={styles.regretItem}>
+    <TouchableOpacity 
+      style={[
+        styles.checkbox,
+        item.success && styles.checkboxDisabled
+      ]} 
+      onPress={() => onToggle(item.id, item.success)}
+      disabled={item.success}
+    >
+      {item.success && <Text style={styles.checkmark}>✓</Text>}
+    </TouchableOpacity>
+    <Text style={[
+      styles.regretText,
+      item.success && styles.completedRegret
+    ]}>{item.description}</Text>
+  </View>
+));
+
+const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
   const [newRegret, setNewRegret] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { checklist, regrets, loading, error, createRegret, toggleRegretSuccess } = useChecklist({ today: true });
 
   useEffect(() => {
@@ -17,25 +43,34 @@ export default function Checklist({ onRegretsUpdate }: ChecklistProps) {
     }
   }, [regrets, onRegretsUpdate]);
 
-  const handleAddRegret = async () => {
-    if (newRegret.trim().length === 0) return;
+  const handleAddRegret = useCallback(async () => {
+    if (newRegret.trim().length === 0 || isSubmitting) return;
     
     try {
+      setIsSubmitting(true);
       await createRegret(newRegret.trim());
       setNewRegret('');
     } catch (err) {
       // Error is handled by the hook
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }, [newRegret, createRegret, isSubmitting]);
 
-  const handleToggleRegret = async (regretId: number, currentSuccess: boolean) => {
+  const handleToggleRegret = useCallback(async (regretId: number, currentSuccess: boolean) => {
     // Only allow toggling if the regret is not already successful
     if (!currentSuccess) {
       await toggleRegretSuccess(regretId);
     }
-  };
+  }, [toggleRegretSuccess]);
 
-  if (loading) {
+  const keyExtractor = useCallback((item: Regret) => item.id.toString(), []);
+
+  const renderItem = useCallback(({ item }: { item: Regret }) => (
+    <RegretItem item={item} onToggle={handleToggleRegret} />
+  ), [handleToggleRegret]);
+
+  if (loading && regrets.length === 0) {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#4CAF50" />
@@ -62,45 +97,38 @@ export default function Checklist({ onRegretsUpdate }: ChecklistProps) {
           placeholder="Add a new regret..."
           placeholderTextColor="#666"
           keyboardAppearance="dark"
+          editable={!isSubmitting}
         />
         <TouchableOpacity 
           style={[
             styles.addButton,
-            newRegret.trim().length === 0 && styles.buttonDisabled
+            (newRegret.trim().length === 0 || isSubmitting) && styles.buttonDisabled
           ]} 
           onPress={handleAddRegret}
-          disabled={newRegret.trim().length === 0}
+          disabled={newRegret.trim().length === 0 || isSubmitting}
         >
-          <Text style={styles.addButtonText}>+</Text>
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="#121212" />
+          ) : (
+            <Text style={styles.addButtonText}>+</Text>
+          )}
         </TouchableOpacity>
       </View>
 
       <FlatList
         style={styles.list}
         data={regrets}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.regretItem}>
-            <TouchableOpacity 
-              style={[
-                styles.checkbox,
-                item.success && styles.checkboxDisabled
-              ]} 
-              onPress={() => handleToggleRegret(item.id, item.success)}
-              disabled={item.success}
-            >
-              {item.success && <Text style={styles.checkmark}>✓</Text>}
-            </TouchableOpacity>
-            <Text style={[
-              styles.regretText,
-              item.success && styles.completedRegret
-            ]}>{item.description}</Text>
-          </View>
-        )}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={10}
+        updateCellsBatchingPeriod={50}
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -198,4 +226,6 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: '#666',
   },
-}); 
+});
+
+export default memo(Checklist); 
