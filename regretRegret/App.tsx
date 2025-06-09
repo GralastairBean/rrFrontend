@@ -43,6 +43,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const [username, setUsername] = useState<string>('');
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [lastCalculatedRegretIndex, setLastCalculatedRegretIndex] = useState<number>(-1);
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
@@ -50,7 +51,6 @@ function AppContent() {
   useEffect(() => {
     if (currentScreen !== 'main') {
       setRegrets([]);
-      setChecklistLoading(true);
     }
   }, [currentScreen]);
 
@@ -147,19 +147,30 @@ function AppContent() {
     if (currentScreen === 'main') {
       setRegrets(updatedRegrets);
       setChecklistLoading(isLoading);
+      
+      // Calculate and store the regret index when data is loaded
+      if (!isLoading && updatedRegrets.length > 0) {
+        const uncompletedCount = updatedRegrets.filter(r => !r.success).length;
+        const newIndex = Math.round((uncompletedCount / updatedRegrets.length) * 100);
+        setLastCalculatedRegretIndex(newIndex);
+      }
     }
   };
 
   const calculateRegretIndex = () => {
-    if (checklistLoading) return -1;
-    if (regrets.length === 0) return -1;
-    const uncompletedCount = regrets.filter(r => !r.success).length;
-    return Math.round((uncompletedCount / regrets.length) * 100);
+    if (currentScreen === 'main') {
+      if (checklistLoading) return -1;
+      if (regrets.length === 0) return -1;
+      const uncompletedCount = regrets.filter(r => !r.success).length;
+      return Math.round((uncompletedCount / regrets.length) * 100);
+    }
+    // Use the last calculated index for other screens
+    return lastCalculatedRegretIndex;
   };
 
   const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
-    if (checklistLoading) return { text: '', color: themeColors.text, style: {} };
-    if (index === -1 && !checklistLoading) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
+    if (currentScreen === 'main' && checklistLoading) return { text: '', color: themeColors.text, style: {} };
+    if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
     return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
   };
 
