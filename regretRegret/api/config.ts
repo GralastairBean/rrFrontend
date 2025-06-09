@@ -1,100 +1,32 @@
-import axios from 'axios';
-import type { AxiosRequestConfig } from 'axios';
-import { Platform } from 'react-native';
+import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 import { authService } from './services/authService';
-import { handleApiError } from './utils/errorHandling';
-import Constants from 'expo-constants';
 
-// Get the appropriate base URL for the platform
-const getBaseUrl = () => {
-  // If an explicit API URL is set in environment, use that
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    console.log('Using environment API URL:', process.env.EXPO_PUBLIC_API_URL);
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
+// Define error response types
+interface TokenErrorResponse {
+  code: string;
+  detail: string;
+}
 
-  // Get the local machine's IP address when running in Expo development
-  const debuggerHost = Constants.expoConfig?.hostUri;
-  const localhost = debuggerHost?.split(':')[0];
-  
-  console.log('Debug host info:', { debuggerHost, localhost, platform: Platform.OS });
-  
-  if (__DEV__) {
-    // For physical devices (both iOS and Android), use the development machine's IP
-    if (localhost && !Constants.isDevice) {
-      const url = `http://${localhost}:8000`;
-      console.log('Using physical device URL:', url);
-      return url;
-    }
-    
-    // For iOS simulator, use localhost
-    if (Platform.OS === 'ios' && !Constants.isDevice) {
-      console.log('Using iOS simulator URL: http://localhost:8000');
-      return 'http://localhost:8000';
-    }
-    
-    // For Android emulator, use 10.0.2.2 (special Android emulator hostname for localhost)
-    if (Platform.OS === 'android' && !Constants.isDevice) {
-      console.log('Using Android emulator URL: http://10.0.2.2:8000');
-      return 'http://10.0.2.2:8000';
-    }
+const BASE_URL = 'http://192.168.0.13:8000';
 
-    // For any physical device in development, use the machine's IP
-    if (localhost) {
-      const url = `http://${localhost}:8000`;
-      console.log('Using development machine IP:', url);
-      return url;
-    }
-  }
-  
-  // Default fallback (should be your production API URL in non-DEV mode)
-  console.log('Using default fallback URL: http://localhost:8000');
-  return 'http://localhost:8000';
-};
-
-// Get the base URL once at startup
-const BASE_URL = getBaseUrl();
-console.log('Final API Base URL:', BASE_URL);
-
-// Helper function to convert data to FormData
-const convertToFormData = (data: any): FormData => {
+// Function to convert object to FormData
+function convertToFormData(obj: Record<string, any>): FormData {
   const formData = new FormData();
-  
-  // Handle nested objects and arrays
-  const appendFormData = (data: any, parentKey?: string) => {
-    if (data && typeof data === 'object' && !(data instanceof File) && !(data instanceof Blob)) {
-      Object.entries(data).forEach(([key, value]) => {
-        const formKey = parentKey ? `${parentKey}[${key}]` : key;
-        
-        if (value === null || value === undefined) {
-          return;
-        }
-        
-        if (value instanceof File || value instanceof Blob) {
-          formData.append(formKey, value);
-        } else if (typeof value === 'object') {
-          appendFormData(value, formKey);
-        } else {
-          formData.append(formKey, String(value));
-        }
-      });
-    } else if (data !== null && data !== undefined) {
-      formData.append(parentKey || 'data', data);
+  Object.entries(obj).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      formData.append(key, value);
     }
-  };
-  
-  appendFormData(data);
+  });
   return formData;
-};
+}
 
-// Create an axios instance with default config
+// Create API instance with auth
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'multipart/form-data',
+    'Content-Type': 'application/json',
   },
-  withCredentials: true, // Enable cookie authentication
-  timeout: 10000, // Add a timeout
+  timeout: 10000,
 });
 
 // Create a public API instance without auth
@@ -103,55 +35,77 @@ export const publicApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // Add a timeout
+  timeout: 10000,
 });
 
 // Add request interceptor for JWT token and form data conversion
 api.interceptors.request.use(
   async (config) => {
-    console.log('Making authenticated request:', {
-      method: config.method,
-      url: config.url,
-      baseURL: config.baseURL,
-      data: config.data
-    });
-
     // Add auth token
     const token = await authService.getAccessToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    
+    // Log the authorization status
+    console.log('🔐 Request authorization status:', {
+      hasToken: !!token,
+      currentAuthHeader: config.headers?.Authorization,
+      url: config.url,
+      method: config.method
+    });
+
+    if (!token) {
+      console.warn('⚠️ No access token available for request');
+    } else if (!config.headers) {
+      console.warn('⚠️ No headers object in request config');
+      config.headers = new AxiosHeaders();
     }
+
+    // Ensure headers object exists
+    if (!config.headers) {
+      config.headers = new AxiosHeaders();
+    }
+
+    // Set the authorization header if we have a token
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ Authorization header set for request');
+    }
+
+    console.log('📤 Outgoing request headers:', {
+      contentType: config.headers['Content-Type'],
+      authorization: config.headers.Authorization ? 'Bearer [token]' : 'none'
+    });
 
     // Convert POST data to FormData
     if (config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
       config.data = convertToFormData(config.data);
-      if (config.headers) {
-        config.headers['Content-Type'] = 'multipart/form-data';
-      }
+      config.headers['Content-Type'] = 'multipart/form-data';
+      console.log('📦 Converted request data to FormData');
     }
 
     return config;
+  },
+  (error) => {
+    console.error('❌ Request interceptor error:', error);
+    return Promise.reject(error);
   }
 );
 
-// Add request interceptor for form data conversion to public API
-publicApi.interceptors.request.use(
-  (config) => {
-    console.log('Making public request:', {
-      method: config.method,
-      url: config.url,
-      baseURL: config.baseURL,
-      data: config.data
-    });
-
-    // Only convert to FormData if specifically needed
-    if (config.headers?.['Content-Type'] === 'multipart/form-data' && config.method?.toLowerCase() === 'post' && config.data && !(config.data instanceof FormData)) {
-      config.data = convertToFormData(config.data);
+// Function to handle API errors
+const handleApiError = (error: unknown, customMessage?: string, showAlert = true) => {
+  if (error instanceof Error) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response) {
+      console.error('Error response:', {
+        status: axiosError.response.status,
+        data: axiosError.response.data,
+        headers: axiosError.response.headers
+      });
+    } else if (axiosError.request) {
+      console.error('No response received:', axiosError.request);
     }
-
-    return config;
   }
-);
+  return error;
+};
 
 // Add response interceptor for token refresh and error handling
 api.interceptors.response.use(
@@ -167,28 +121,41 @@ api.interceptors.response.use(
 
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     if (!originalRequest) return Promise.reject(handleApiError(error, undefined, false));
-    
-    // If the error is 401 and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+
+    // Check if the error is due to an invalid/expired token
+    const isAccessTokenError = error.response?.status === 401;
+    const isBlacklistedToken = error.response?.data?.detail === 'Token is blacklisted';
+
+    // If token is blacklisted, clear auth and don't retry
+    if (isBlacklistedToken) {
+      console.log('🚫 Token is blacklisted, clearing auth...');
+      await authService.clearAuth();
+      return Promise.reject(error);
+    }
+
+    // Only retry once for expired (but not blacklisted) tokens
+    if (isAccessTokenError && !isBlacklistedToken && !originalRequest._retry) {
+      console.log('🔄 Access token expired, attempting to get new one...');
       originalRequest._retry = true;
-      
+
       try {
-        // Clear the old access token before refreshing
-        delete api.defaults.headers.common['Authorization'];
-        
+        // Try to get a new access token using refresh token
         const newToken = await authService.refreshToken();
-        if (newToken && originalRequest.headers) {
+        if (newToken) {
+          console.log('✅ Got new access token, retrying original request');
           // Update the request headers with new token
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          }
           // Ensure the base request also has the new token
           api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+          
+          // Retry the original request with the new token
           return api(originalRequest);
         }
       } catch (refreshError) {
-        // If refresh fails, clear auth and handle the error
-        console.error('Token refresh failed:', refreshError);
+        console.error('❌ Could not get new access token:', refreshError);
         await authService.clearAuth();
-        return Promise.reject(handleApiError(refreshError, undefined, false));
       }
     }
     

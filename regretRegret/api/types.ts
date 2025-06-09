@@ -22,6 +22,7 @@ export interface TokenRefreshRequest {
 
 export interface TokenRefreshResponse {
   access: string;
+  refresh?: string;  // Optional refresh token in response
 }
 
 export interface User {
