@@ -107,6 +107,7 @@ export default function App() {
   const handleLogout = async () => {
     try {
       await authService.logout();
+      await AsyncStorage.removeItem('hasSeenWelcome');
       setIsAuthenticated(false);
       setUsername('');
       setCurrentScreen('main');
