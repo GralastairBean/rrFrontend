@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, Image, TextStyle } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from './api/services/authService';
 import Registration from './components/Registration';
 import Checklist from './components/Checklist';
@@ -8,6 +9,7 @@ import Settings from './components/Settings';
 import RegretHistory from './components/RegretHistory';
 import Network from './components/Network';
 import Layout from './components/Layout';
+import WelcomePopup from './components/WelcomePopup';
 import { Screen } from './components/types';
 import { Regret } from './api/types';
 
@@ -37,10 +39,17 @@ export default function App() {
   const [regrets, setRegrets] = useState<Regret[]>([]);
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const [username, setUsername] = useState<string>('');
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      checkWelcomePopupStatus();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -67,6 +76,26 @@ export default function App() {
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkWelcomePopupStatus = async () => {
+    try {
+      const hasSeenWelcome = await AsyncStorage.getItem('hasSeenWelcome');
+      if (!hasSeenWelcome) {
+        setShowWelcomePopup(true);
+      }
+    } catch (error) {
+      console.error('Failed to check welcome popup status:', error);
+    }
+  };
+
+  const handleWelcomePopupClose = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenWelcome', 'true');
+      setShowWelcomePopup(false);
+    } catch (error) {
+      console.error('Failed to save welcome popup status:', error);
     }
   };
 
@@ -185,6 +214,7 @@ export default function App() {
       <Layout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>
         {renderCurrentScreen()}
       </Layout>
+      <WelcomePopup visible={showWelcomePopup} onClose={handleWelcomePopupClose} />
     </KeyboardAvoidingView>
   );
 }
