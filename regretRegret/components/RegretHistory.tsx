@@ -35,6 +35,15 @@ const formatRegretIndex = (index: number): { text: string; color: string; style:
   return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
 };
 
+const calculateAverageIndex = (data: DayHistory[], days: number) => {
+  if (data.length <= 1) return -1;  // Need more than just today's data
+  const previousDays = data.slice(1, days + 1);  // Skip today, take next 'days' elements
+  const validIndices = previousDays.filter(day => day.regretIndex !== -1);
+  if (validIndices.length === 0) return -1;
+  const sum = validIndices.reduce((acc, curr) => acc + curr.regretIndex, 0);
+  return Math.round(sum / validIndices.length);
+};
+
 export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps) {
   const [historyData, setHistoryData] = useState<DayHistory[]>([]);
   const { theme } = useTheme();
@@ -68,10 +77,44 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
     generateMockData();
   }, [currentRegretIndex]);
 
+  const thirtyDayAverage = calculateAverageIndex(historyData, 30);
+  const sevenDayAverage = calculateAverageIndex(historyData, 7);
+
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: themeColors.primary }]}>Regret Index History</Text>
+        
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <View style={styles.statRow}>
+              <Text style={[styles.statLabel, { color: themeColors.text }]}>
+                Average (Last 30 Days):
+              </Text>
+              <Text style={[
+                styles.statValue,
+                { color: getRegretIndexColor(thirtyDayAverage) }
+              ]}>
+                {thirtyDayAverage === -1 ? 'N/A' : `${thirtyDayAverage}%`}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.statItem}>
+            <View style={styles.statRow}>
+              <Text style={[styles.statLabel, { color: themeColors.text }]}>
+                Average (Previous 7 Days):
+              </Text>
+              <Text style={[
+                styles.statValue,
+                { color: getRegretIndexColor(sevenDayAverage) }
+              ]}>
+                {sevenDayAverage === -1 ? 'N/A' : `${sevenDayAverage}%`}
+              </Text>
+            </View>
+          </View>
+        </View>
+
         <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Last 30 Days</Text>
       </View>
 
@@ -126,6 +169,27 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 15,
+  },
+  statsContainer: {
+    width: '100%',
+    marginBottom: 15,
+  },
+  statItem: {
+    marginBottom: 8,
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statLabel: {
+    fontSize: 14,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   subtitle: {
     fontSize: 14,
