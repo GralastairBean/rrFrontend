@@ -5,6 +5,7 @@ import { useChecklist } from '../hooks/useChecklist';
 import { Regret } from '../api/types';
 import ParticleSystem from './ParticleSystem';
 import RegretConfirmationModal from './RegretConfirmationModal';
+import { playCheckSound } from '../utils/sound';
 
 interface ChecklistProps {
   onRegretsUpdate?: (regrets: Regret[]) => void;
@@ -43,6 +44,7 @@ const RegretItem = memo(({
       await AsyncStorage.setItem('hasSeenRegretConfirmation', 'true');
       setShowConfirmation(false);
       setShowParticles(true);
+      await playCheckSound();
       onToggle(item.id, item.success);
       setTimeout(() => {
         setShowParticles(false);
