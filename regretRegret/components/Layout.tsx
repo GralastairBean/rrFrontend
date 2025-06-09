@@ -1,5 +1,6 @@
 import { StyleSheet, View, TouchableOpacity, Image } from 'react-native';
 import { Screen } from './types';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,21 +9,24 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, currentScreen, setCurrentScreen }: LayoutProps) {
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
+
   const getIconStyle = (screen: Screen) => {
     return [
       styles.iconImage,
-      currentScreen === screen && styles.activeIcon
+      { tintColor: currentScreen === screen ? themeColors.primary : themeColors.textSecondary }
     ];
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.content}>
         {children}
       </View>
       
-      <View style={styles.bottomSection}>
-        <View style={styles.separator} />
+      <View style={[styles.bottomSection, { backgroundColor: themeColors.background }]}>
+        <View style={[styles.separator, { backgroundColor: themeColors.border }]} />
         <View style={styles.iconRow}>
           <TouchableOpacity 
             style={styles.iconButton}
@@ -76,11 +80,10 @@ export default function Layout({ children, currentScreen, setCurrentScreen }: La
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
   },
   content: {
     flex: 1,
-    paddingBottom: 80, // Add padding to prevent content from being hidden behind the navigation bar
+    paddingBottom: 80,
   },
   bottomSection: {
     position: 'absolute',
@@ -89,11 +92,9 @@ const styles = StyleSheet.create({
     right: 0,
     paddingBottom: 20,
     alignItems: 'center',
-    backgroundColor: '#121212',
   },
   separator: {
     height: 1,
-    backgroundColor: '#333',
     width: '100%',
     marginBottom: 20,
   },
@@ -113,9 +114,5 @@ const styles = StyleSheet.create({
   iconImage: {
     width: 37,
     height: 37,
-    tintColor: '#888',
-  },
-  activeIcon: {
-    tintColor: '#4CAF50',
   },
 }); 

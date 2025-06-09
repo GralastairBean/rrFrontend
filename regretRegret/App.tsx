@@ -12,6 +12,7 @@ import Layout from './components/Layout';
 import WelcomePopup from './components/WelcomePopup';
 import { Screen } from './components/types';
 import { Regret } from './api/types';
+import { ThemeProvider, useTheme, colors } from './utils/ThemeContext';
 
 export const getRegretIndexColor = (value: number) => {
   if (value <= 0) return '#4CAF50';  // Green
@@ -32,7 +33,7 @@ export const getRegretIndexColor = (value: number) => {
   }
 };
 
-export default function App() {
+function AppContent() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +41,8 @@ export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const [username, setUsername] = useState<string>('');
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
 
   useEffect(() => {
     checkAuthStatus();
@@ -177,9 +180,9 @@ export default function App() {
         return <Network currentRegretIndex={regretIndex} />;
       default:
         return (
-          <View style={styles.mainContent}>
+          <View style={[styles.mainContent, { backgroundColor: themeColors.background }]}>
             <View style={styles.header}>
-              <Text style={styles.title}>Regret Regret</Text>
+              <Text style={[styles.title, { color: themeColors.primary }]}>Regret Regret</Text>
             </View>
             
             <View style={styles.subheaderInfo}>
@@ -189,7 +192,7 @@ export default function App() {
                 resizeMode="contain"
               />
               <View style={styles.textInfo}>
-                <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
+                <Text style={[styles.dateText, { color: themeColors.text }]}>{formatDate(currentDate)}</Text>
                 {(() => {
                   const { text, color, style } = formatRegretIndex(regretIndex);
                   return (
@@ -210,9 +213,9 @@ export default function App() {
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.background }]}
     >
-      <StatusBar style="light" />
+      <StatusBar style={theme === 'dark' ? "light" : "dark"} />
       <Layout currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}>
         {renderCurrentScreen()}
       </Layout>
@@ -221,10 +224,17 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
   },
   centerContent: {
     justifyContent: 'center',
@@ -233,41 +243,38 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     paddingTop: 60,
-    paddingHorizontal: 20,
   },
   header: {
-    marginBottom: 20,
+    paddingHorizontal: 20,
+    marginBottom: 30,
     alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#4CAF50',
     textAlign: 'center',
   },
   subheaderInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 20,
     marginBottom: 20,
-    justifyContent: 'center',
   },
   frogImage: {
-    width: 45,
-    height: 45,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     marginRight: 15,
   },
   textInfo: {
-    alignItems: 'center',
+    flex: 1,
   },
   dateText: {
     fontSize: 16,
-    color: '#888',
     marginBottom: 5,
-    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '500',
   },
 });

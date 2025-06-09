@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface WelcomePopupProps {
   visible: boolean;
@@ -7,6 +8,9 @@ interface WelcomePopupProps {
 }
 
 const WelcomePopup: React.FC<WelcomePopupProps> = ({ visible, onClose }) => {
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
+
   return (
     <Modal
       animationType="fade"
@@ -15,13 +19,13 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ visible, onClose }) => {
       onRequestClose={onClose}
     >
       <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <Text style={styles.title}>Regret Regret is Permanent</Text>
-          <Text style={styles.message}>
+        <View style={[styles.modalView, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <Text style={[styles.title, { color: themeColors.primary }]}>Regret Regret is Permanent</Text>
+          <Text style={[styles.message, { color: themeColors.text }]}>
             To begin, enter your first regret, but be warned, in order to avoid regret manipulation you cannot edit or delete a regret. Enter your daily regret list thoughtfully!
           </Text>
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, { backgroundColor: themeColors.primary }]}
             onPress={onClose}
           >
             <Text style={styles.buttonText}>Got it!</Text>
@@ -41,7 +45,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: '#1E1E1E',
     borderRadius: 15,
     padding: 25,
     alignItems: 'center',
@@ -54,23 +57,21 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     maxWidth: '85%',
+    borderWidth: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
     marginBottom: 15,
     textAlign: 'center',
   },
   message: {
     fontSize: 16,
-    color: '#FFFFFF',
     marginBottom: 20,
     textAlign: 'center',
     lineHeight: 22,
   },
   button: {
-    backgroundColor: '#4CAF50',
     borderRadius: 10,
     padding: 12,
     paddingHorizontal: 30,

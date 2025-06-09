@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface RegretConfirmationModalProps {
   visible: boolean;
@@ -12,6 +13,9 @@ const RegretConfirmationModal: React.FC<RegretConfirmationModalProps> = ({
   onConfirm, 
   onCancel 
 }) => {
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
+
   return (
     <Modal
       animationType="fade"
@@ -20,20 +24,20 @@ const RegretConfirmationModal: React.FC<RegretConfirmationModalProps> = ({
       onRequestClose={onCancel}
     >
       <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <Text style={styles.title}>Complete Regret?</Text>
-          <Text style={styles.message}>
+        <View style={[styles.modalView, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <Text style={[styles.title, { color: themeColors.primary }]}>Complete Regret?</Text>
+          <Text style={[styles.message, { color: themeColors.text }]}>
             Regret Regret is a permanent record. Ticking off a regret cannot be undone.
           </Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[styles.button, styles.cancelButton, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}
               onPress={onCancel}
             >
-              <Text style={styles.cancelButtonText}>No</Text>
+              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>No</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.confirmButton]}
+              style={[styles.button, styles.confirmButton, { backgroundColor: themeColors.primary }]}
               onPress={onConfirm}
             >
               <Text style={styles.confirmButtonText}>Yes</Text>
@@ -54,7 +58,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: '#1E1E1E',
     borderRadius: 15,
     padding: 25,
     alignItems: 'center',
@@ -67,17 +70,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     maxWidth: '85%',
+    borderWidth: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
     marginBottom: 15,
     textAlign: 'center',
   },
   message: {
     fontSize: 16,
-    color: '#FFFFFF',
     marginBottom: 20,
     textAlign: 'center',
     lineHeight: 22,
@@ -88,30 +90,26 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   button: {
-    borderRadius: 10,
-    padding: 12,
-    paddingHorizontal: 20,
-    elevation: 2,
     flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: '#333',
+    borderWidth: 1,
   },
   confirmButton: {
-    backgroundColor: '#4CAF50',
+    elevation: 2,
   },
   cancelButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
     fontSize: 16,
+    fontWeight: '500',
   },
   confirmButtonText: {
     color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
     fontSize: 16,
+    fontWeight: '500',
   },
 });
 

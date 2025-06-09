@@ -6,6 +6,7 @@ import { Regret } from '../api/types';
 import ParticleSystem from './ParticleSystem';
 import RegretConfirmationModal from './RegretConfirmationModal';
 import { playCheckSound } from '../utils/sound';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface ChecklistProps {
   onRegretsUpdate?: (regrets: Regret[]) => void;
@@ -21,6 +22,8 @@ const RegretItem = memo(({
   const [showParticles, setShowParticles] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const checkboxRef = useRef<View>(null);
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
 
   const handleToggleAttempt = useCallback(async () => {
     if (item.success) return;
@@ -59,7 +62,13 @@ const RegretItem = memo(({
   };
 
   return (
-    <View style={styles.regretItem}>
+    <View style={[
+      styles.regretItem,
+      {
+        backgroundColor: themeColors.surface,
+        borderColor: themeColors.border,
+      }
+    ]}>
       <View style={styles.contentContainer}>
         <View style={styles.checkboxContainer}>
           <TouchableOpacity 
@@ -70,7 +79,8 @@ const RegretItem = memo(({
               ref={checkboxRef}
               style={[
                 styles.checkbox,
-                item.success && styles.checkboxDisabled
+                { borderColor: themeColors.primary },
+                item.success && [styles.checkboxDisabled, { backgroundColor: themeColors.primary }]
               ]}
             >
               {item.success && <Text style={styles.checkmark}>✓</Text>}
@@ -79,13 +89,17 @@ const RegretItem = memo(({
           {showParticles && (
             <ParticleSystem
               count={20}
-              color="#4CAF50"
+              color={themeColors.primary}
             />
           )}
         </View>
         <Text style={[
           styles.regretText,
-          item.success && styles.completedRegret
+          { color: themeColors.text },
+          item.success && { 
+            color: themeColors.textSecondary,
+            textDecorationLine: 'line-through'
+          }
         ]}>{item.description}</Text>
       </View>
       <RegretConfirmationModal
@@ -101,6 +115,8 @@ const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
   const [newRegret, setNewRegret] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { checklist, regrets, loading, error, createRegret, toggleRegretSuccess } = useChecklist({ today: true });
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
 
   useEffect(() => {
     if (onRegretsUpdate) {
@@ -137,8 +153,8 @@ const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
   if (loading && regrets.length === 0) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={[styles.title, { marginTop: 20 }]}>Loading today's checklist...</Text>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+        <Text style={[styles.title, { color: themeColors.text, marginTop: 20 }]}>Loading today's checklist...</Text>
       </View>
     );
   }
@@ -146,7 +162,7 @@ const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
   if (error) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
       </View>
     );
   }
@@ -155,40 +171,55 @@ const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
     <View style={styles.container}>
       <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: themeColors.surface,
+              borderColor: themeColors.border,
+              color: themeColors.text,
+            }
+          ]}
           value={newRegret}
           onChangeText={setNewRegret}
           placeholder="Add a new regret..."
-          placeholderTextColor="#666"
-          keyboardAppearance="dark"
+          placeholderTextColor={themeColors.textSecondary}
+          returnKeyType="done"
+          onSubmitEditing={handleAddRegret}
           editable={!isSubmitting}
+          keyboardAppearance={theme === 'dark' ? 'dark' : 'light'}
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.addButton,
-            (newRegret.trim().length === 0 || isSubmitting) && styles.buttonDisabled
-          ]} 
+            {
+              backgroundColor: newRegret.trim().length === 0 || isSubmitting
+                ? themeColors.surface
+                : themeColors.primary,
+              borderColor: themeColors.border,
+            }
+          ]}
           onPress={handleAddRegret}
           disabled={newRegret.trim().length === 0 || isSubmitting}
         >
-          {isSubmitting ? (
-            <ActivityIndicator size="small" color="#121212" />
-          ) : (
-            <Text style={styles.addButtonText}>+</Text>
-          )}
+          <Text style={[
+            styles.addButtonText,
+            {
+              color: newRegret.trim().length === 0 || isSubmitting
+                ? themeColors.textSecondary
+                : themeColors.buttonText
+            }
+          ]}>
+            {isSubmitting ? 'Adding...' : 'Add'}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
-        style={styles.list}
         data={regrets}
-        keyExtractor={keyExtractor}
         renderItem={renderItem}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={10}
-        updateCellsBatchingPeriod={50}
+        keyExtractor={keyExtractor}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
@@ -197,6 +228,7 @@ const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 20,
   },
   centerContent: {
     justifyContent: 'center',
@@ -204,61 +236,48 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    color: '#4CAF50',
     textAlign: 'center',
   },
   errorText: {
     fontSize: 16,
-    color: '#f44336',
     textAlign: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 10,
     marginBottom: 20,
-    width: '100%',
   },
   input: {
     flex: 1,
     height: 48,
     borderWidth: 1,
-    borderColor: '#333',
     borderRadius: 8,
     paddingHorizontal: 15,
     fontSize: 16,
-    backgroundColor: '#1E1E1E',
-    color: '#fff',
-    marginRight: 15,
+    marginRight: 10,
   },
   addButton: {
-    width: 80,
     height: 48,
-    backgroundColor: '#4CAF50',
+    paddingHorizontal: 20,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: '#1E1E1E',
-    borderColor: '#333',
     borderWidth: 1,
   },
   addButtonText: {
-    color: '#121212',
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '500',
   },
   list: {
     flex: 1,
-    paddingHorizontal: 10,
+  },
+  listContent: {
+    paddingBottom: 20,
   },
   regretItem: {
-    backgroundColor: '#1E1E1E',
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#333',
   },
   contentContainer: {
     flexDirection: 'row',
@@ -266,22 +285,18 @@ const styles = StyleSheet.create({
   },
   checkboxContainer: {
     position: 'relative',
-    width: 24,
-    height: 24,
     marginRight: 10,
   },
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxDisabled: {
-    borderColor: '#1b5e20',
-    backgroundColor: '#1b5e20',
+    borderWidth: 0,
   },
   checkmark: {
     color: '#fff',
@@ -289,14 +304,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   regretText: {
-    fontSize: 16,
-    color: '#fff',
     flex: 1,
-  },
-  completedRegret: {
-    textDecorationLine: 'line-through',
-    color: '#666',
+    fontSize: 16,
+    lineHeight: 24,
   },
 });
 
-export default memo(Checklist); 
+export default Checklist; 

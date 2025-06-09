@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, Image, TextStyle } from 'react-native';
 import { authService } from '../api/services/authService';
 import { useState, useEffect } from 'react';
 import { getRegretIndexColor } from '../App';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface NetworkProps {
   currentRegretIndex: number;
@@ -35,6 +36,8 @@ const generateRandomSubscribers = (): Subscriber[] => {
 export default function Network({ currentRegretIndex }: NetworkProps) {
   const [username, setUsername] = useState<string>('');
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
 
   useEffect(() => {
     const loadUsername = async () => {
@@ -50,39 +53,39 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
   const { text, color, style } = formatRegretIndex(currentRegretIndex);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Network</Text>
+        <Text style={[styles.title, { color: themeColors.primary }]}>Network</Text>
       </View>
 
-      <View style={styles.userInfo}>
+      <View style={[styles.userInfo, { borderBottomColor: themeColors.border }]}>
         <View style={styles.usernameContainer}>
           <Image 
             source={require('../assets/user_1.png')}
-            style={styles.userIcon}
+            style={[styles.userIcon, { tintColor: themeColors.primary }]}
             resizeMode="contain"
           />
-          <Text style={styles.username}>{username}</Text>
+          <Text style={[styles.username, { color: themeColors.text }]}>{username}</Text>
           <Text style={[styles.regretIndex, { color }, style]}>
             {text}
           </Text>
         </View>
       </View>
 
-      <Text style={styles.subtitle}>Daily Croak Subscribers</Text>
+      <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Daily Croak Subscribers</Text>
       
       <View style={styles.subscribersList}>
         {subscribers.map((subscriber, index) => {
           const { text, color, style } = formatRegretIndex(subscriber.regretIndex);
           return (
-            <View key={index} style={styles.subscriberItem}>
+            <View key={index} style={[styles.subscriberItem, { borderBottomColor: themeColors.border }]}>
               <View style={styles.subscriberInfo}>
                 <Image 
                   source={require('../assets/user_1.png')}
-                  style={styles.subscriberIcon}
+                  style={[styles.subscriberIcon, { tintColor: themeColors.primary }]}
                   resizeMode="contain"
                 />
-                <Text style={styles.subscriberUsername}>{subscriber.username}</Text>
+                <Text style={[styles.subscriberUsername, { color: themeColors.text }]}>{subscriber.username}</Text>
               </View>
               <Text style={[styles.subscriberRegretIndex, { color }, style]}>
                 {text}
@@ -98,7 +101,6 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     paddingTop: 60,
   },
   header: {
@@ -109,22 +111,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#4CAF50',
     textAlign: 'center',
   },
   userInfo: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
     marginBottom: 20,
     alignItems: 'center',
-  },
-  label: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 5,
-    textAlign: 'center',
   },
   usernameContainer: {
     flexDirection: 'row',
@@ -135,19 +129,11 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginRight: 10,
-    tintColor: '#4CAF50',
   },
   username: {
     fontSize: 18,
-    color: '#fff',
     fontWeight: '500',
     textAlign: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#333',
-    marginHorizontal: 20,
-    marginVertical: 20,
   },
   regretIndex: {
     fontSize: 18,
@@ -156,7 +142,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 18,
-    color: '#888',
     paddingHorizontal: 20,
     marginBottom: 20,
     textAlign: 'center',
@@ -170,7 +155,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   subscriberInfo: {
     flexDirection: 'row',
@@ -180,11 +164,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 10,
-    tintColor: '#4CAF50',
   },
   subscriberUsername: {
     fontSize: 16,
-    color: '#fff',
   },
   subscriberRegretIndex: {
     fontSize: 16,

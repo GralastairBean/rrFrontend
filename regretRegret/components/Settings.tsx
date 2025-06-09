@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image, Platform, Pressable, Modal } from 'react-native';
 import { useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface SettingsProps {
   username: string;
@@ -12,6 +13,8 @@ export default function Settings({ username, onLogout }: SettingsProps) {
   const [endOfDay, setEndOfDay] = useState(new Date(new Date().setHours(23, 59)));
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempTime, setTempTime] = useState(new Date());
+  const { theme, toggleTheme } = useTheme();
+  const themeColors = colors[theme];
 
   const handleLogoutPress = () => {
     Alert.alert(
@@ -61,37 +64,47 @@ export default function Settings({ username, onLogout }: SettingsProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={[styles.title, { color: themeColors.primary }]}>Settings</Text>
       </View>
 
-      <View style={styles.userInfo}>
-        <Text style={styles.label}>Username</Text>
+      <View style={[styles.userInfo, { borderBottomColor: themeColors.border }]}>
+        <Text style={[styles.label, { color: themeColors.textSecondary }]}>Username</Text>
         <View style={styles.usernameContainer}>
           <Image 
             source={require('../assets/user_1.png')}
-            style={styles.userIcon}
+            style={[styles.userIcon, { tintColor: themeColors.primary }]}
             resizeMode="contain"
           />
-          <Text style={styles.username}>{username}</Text>
+          <Text style={[styles.username, { color: themeColors.text }]}>{username}</Text>
         </View>
       </View>
 
-      <View style={styles.settingItem}>
-        <Text style={styles.settingLabel}>Send Daily Croak</Text>
+      <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+        <Text style={[styles.settingLabel, { color: themeColors.text }]}>Dark Mode</Text>
+        <Switch
+          value={theme === 'dark'}
+          onValueChange={toggleTheme}
+          trackColor={{ false: themeColors.border, true: themeColors.primary }}
+          thumbColor={theme === 'dark' ? '#fff' : '#f4f3f4'}
+        />
+      </View>
+
+      <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+        <Text style={[styles.settingLabel, { color: themeColors.text }]}>Send Daily Croak</Text>
         <Switch
           value={sendDailyCroak}
           onValueChange={setSendDailyCroak}
-          trackColor={{ false: '#333', true: '#4CAF50' }}
+          trackColor={{ false: themeColors.border, true: themeColors.primary }}
           thumbColor={sendDailyCroak ? '#fff' : '#f4f3f4'}
         />
       </View>
 
-      <View style={styles.settingItem}>
-        <Text style={styles.settingLabel}>End of Day</Text>
-        <Pressable onPress={handleOpenTimePicker} style={styles.timeButton}>
-          <Text style={styles.timeText}>{formatTime(endOfDay)}</Text>
+      <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+        <Text style={[styles.settingLabel, { color: themeColors.text }]}>End of Day</Text>
+        <Pressable onPress={handleOpenTimePicker} style={[styles.timeButton, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <Text style={[styles.timeText, { color: themeColors.primary }]}>{formatTime(endOfDay)}</Text>
         </Pressable>
       </View>
 
@@ -101,8 +114,8 @@ export default function Settings({ username, onLogout }: SettingsProps) {
         animationType="fade"
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select End of Day Time</Text>
+          <View style={[styles.modalContent, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+            <Text style={[styles.modalTitle, { color: themeColors.primary }]}>Select End of Day Time</Text>
             <DateTimePicker
               value={tempTime}
               mode="time"
@@ -110,14 +123,14 @@ export default function Settings({ username, onLogout }: SettingsProps) {
               display="spinner"
               onChange={handleTimeChange}
               style={styles.timePicker}
-              textColor="#fff"
+              textColor={themeColors.text}
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]} 
                 onPress={handleCancelTime}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.confirmButton]} 
@@ -142,7 +155,6 @@ export default function Settings({ username, onLogout }: SettingsProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     paddingTop: 60,
   },
   header: {
@@ -153,20 +165,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#4CAF50',
     textAlign: 'center',
   },
   userInfo: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
     marginBottom: 20,
     alignItems: 'center',
   },
   label: {
     fontSize: 14,
-    color: '#888',
     marginBottom: 5,
     textAlign: 'center',
   },
@@ -179,11 +188,9 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginRight: 10,
-    tintColor: '#4CAF50',
   },
   username: {
     fontSize: 18,
-    color: '#fff',
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -194,45 +201,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   settingLabel: {
     fontSize: 16,
-    color: '#fff',
   },
   timeButton: {
-    backgroundColor: '#1E1E1E',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#333',
   },
   timeText: {
-    color: '#4CAF50',
     fontSize: 16,
     fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    padding: 20,
-    width: '80%',
+    margin: 20,
+    borderRadius: 15,
+    padding: 25,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    maxWidth: '85%',
     borderWidth: 1,
-    borderColor: '#333',
   },
   modalTitle: {
     fontSize: 18,
-    color: '#fff',
-    marginBottom: 20,
     fontWeight: '500',
+    marginBottom: 20,
   },
   timePicker: {
     height: 200,
@@ -252,18 +260,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: '#333',
+    borderWidth: 1,
   },
   confirmButton: {
     backgroundColor: '#4CAF50',
   },
   cancelButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '500',
   },
   confirmButtonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
     fontWeight: '500',
   },

@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useState } from 'react';
 import { authService } from '../api/services/authService';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface RegistrationProps {
   onRegistrationComplete: () => void;
@@ -9,6 +10,8 @@ interface RegistrationProps {
 export default function Registration({ onRegistrationComplete }: RegistrationProps) {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
 
   const handleRegister = async () => {
     if (username.trim().length === 0) {
@@ -34,7 +37,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.background }]}
     >
       <Image 
         source={require('../assets/frog_1.png')}
@@ -44,25 +47,38 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       
       <View style={styles.form}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { 
+            backgroundColor: themeColors.surface,
+            borderColor: themeColors.border,
+            color: themeColors.text,
+          }]}
           value={username}
           onChangeText={setUsername}
           placeholder="Choose a username to begin"
-          placeholderTextColor="#666"
+          placeholderTextColor={themeColors.textSecondary}
           autoCapitalize="none"
           autoCorrect={false}
-          keyboardAppearance="dark"
+          keyboardAppearance={theme === 'dark' ? 'dark' : 'light'}
           editable={!isLoading}
         />
         <TouchableOpacity 
           style={[
             styles.button,
-            (username.trim().length === 0 || isLoading) && styles.buttonDisabled
+            (username.trim().length === 0 || isLoading) && [
+              styles.buttonDisabled,
+              { 
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.border,
+              }
+            ]
           ]} 
           onPress={handleRegister}
           disabled={username.trim().length === 0 || isLoading}
         >
-          <Text style={styles.buttonText}>
+          <Text style={[
+            styles.buttonText,
+            (username.trim().length === 0 || isLoading) && { color: themeColors.textSecondary }
+          ]}>
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </Text>
         </TouchableOpacity>
@@ -74,7 +90,6 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     paddingTop: 20,
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -94,12 +109,9 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#333',
     borderRadius: 8,
     paddingHorizontal: 15,
     fontSize: 16,
-    backgroundColor: '#1E1E1E',
-    color: '#fff',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -111,8 +123,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonDisabled: {
-    backgroundColor: '#1E1E1E',
-    borderColor: '#333',
+    backgroundColor: 'transparent',
     borderWidth: 1,
   },
   buttonText: {

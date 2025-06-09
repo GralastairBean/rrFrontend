@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, ScrollView, TextStyle } from 'react-native';
 import { useState, useEffect } from 'react';
 import { getRegretIndexColor } from '../App';
+import { useTheme, colors } from '../utils/ThemeContext';
 
 interface DayHistory {
   date: Date;
@@ -31,6 +32,8 @@ const formatRegretIndex = (index: number): { text: string; color: string; style:
 
 export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps) {
   const [historyData, setHistoryData] = useState<DayHistory[]>([]);
+  const { theme } = useTheme();
+  const themeColors = colors[theme];
 
   useEffect(() => {
     // For now, generate mock data
@@ -61,18 +64,18 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
   }, [currentRegretIndex]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Regret Index History</Text>
-        <Text style={styles.subtitle}>Last 25 Days</Text>
+        <Text style={[styles.title, { color: themeColors.primary }]}>Regret Index History</Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Last 25 Days</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {historyData.map((day, index) => {
           const { text, color, style } = formatRegretIndex(day.regretIndex);
           return (
-            <View key={index} style={styles.dayItem}>
-              <Text style={styles.dateText}>{formatDate(day.date)}</Text>
+            <View key={index} style={[styles.dayItem, { borderBottomColor: themeColors.border }]}>
+              <Text style={[styles.dateText, { color: themeColors.text }]}>{formatDate(day.date)}</Text>
               <Text style={[styles.indexText, { color }, style]}>
                 {text}
               </Text>
@@ -87,7 +90,6 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     paddingTop: 60,
   },
   header: {
@@ -98,12 +100,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#4CAF50',
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#888',
     marginTop: 5,
   },
   content: {
@@ -116,11 +116,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   dateText: {
     fontSize: 14,
-    color: '#fff',
   },
   indexText: {
     fontSize: 14,
