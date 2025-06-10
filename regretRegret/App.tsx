@@ -200,7 +200,7 @@ function AppContent() {
   };
 
   const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
-    if (currentScreen === 'main' && checklistLoading) return { text: '', color: themeColors.text, style: {} };
+    if (currentScreen === 'main' && (checklistLoading || regrets.length === 0)) return { text: '', color: themeColors.text, style: {} };
     if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
     return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
   };
