@@ -10,6 +10,7 @@ import { useTheme, colors } from '../utils/ThemeContext';
 
 interface ChecklistProps {
   onRegretsUpdate?: (regrets: Regret[], isLoading: boolean) => void;
+  shouldRefresh?: boolean;
 }
 
 const RegretItem = memo(({ 
@@ -111,15 +112,23 @@ const RegretItem = memo(({
   );
 });
 
-const Checklist = ({ onRegretsUpdate }: ChecklistProps) => {
+const Checklist = ({ onRegretsUpdate, shouldRefresh }: ChecklistProps) => {
   const [newRegret, setNewRegret] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { checklist, regrets, loading, error, createRegret, toggleRegretSuccess } = useChecklist({ today: true });
+  const { checklist, regrets, loading, error, createRegret, toggleRegretSuccess, refreshChecklist } = useChecklist({ today: true });
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
   useEffect(() => {
+    if (shouldRefresh) {
+      console.log('🔄 Refreshing checklist due to app focus');
+      refreshChecklist();
+    }
+  }, [shouldRefresh, refreshChecklist]);
+
+  useEffect(() => {
     if (onRegretsUpdate) {
+      console.log('📝 Regrets updated:', { count: regrets.length, loading });
       onRegretsUpdate(regrets, loading);
     }
   }, [regrets, onRegretsUpdate, loading]);

@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, Image, TextStyle } from 'react-native';
+import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ActivityIndicator, Image, TextStyle, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from './api/services/authService';
 import Registration from './components/Registration';
@@ -46,6 +46,8 @@ function AppContent() {
   const [lastCalculatedRegretIndex, setLastCalculatedRegretIndex] = useState<number>(-1);
   const { theme } = useTheme();
   const themeColors = colors[theme];
+  const appState = useRef(AppState.currentState);
+  const [shouldRefreshChecklist, setShouldRefreshChecklist] = useState(false);
 
   // Clear regrets data when changing screens
   useEffect(() => {
@@ -71,6 +73,35 @@ function AppContent() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Monitor app state changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      console.log('🔄 App State Changed:', { from: appState.current, to: nextAppState });
+      if (
+        appState.current.match(/inactive|background/) && 
+        nextAppState === 'active' &&
+        isAuthenticated
+      ) {
+        // App has come to foreground
+        console.log('📱 App came to foreground, triggering refresh');
+        setShouldRefreshChecklist(true);
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isAuthenticated]);
+
+  // Reset refresh trigger after it's been consumed
+  useEffect(() => {
+    if (shouldRefreshChecklist) {
+      console.log('🔄 Resetting refresh trigger');
+      setShouldRefreshChecklist(false);
+    }
+  }, [shouldRefreshChecklist]);
 
   const checkAuthStatus = async () => {
     try {
@@ -230,7 +261,10 @@ function AppContent() {
               </View>
             </View>
 
-            <Checklist onRegretsUpdate={handleRegretsUpdate} />
+            <Checklist 
+              onRegretsUpdate={handleRegretsUpdate} 
+              shouldRefresh={shouldRefreshChecklist}
+            />
           </View>
         );
     }
