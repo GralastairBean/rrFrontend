@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, KeyboardAvo
 import { useState } from 'react';
 import { authService } from '../api/services/authService';
 import { useTheme, colors } from '../utils/ThemeContext';
+import { handleApiError } from '../api/utils/errorHandling';
 
 interface RegistrationProps {
   onRegistrationComplete: () => void;
@@ -15,7 +16,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
 
   const handleRegister = async () => {
     if (username.trim().length === 0) {
-      Alert.alert('Error', 'Please enter a username');
+      Alert.alert('Sorry', 'Please enter a username');
       return;
     }
 
@@ -24,11 +25,8 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       await authService.register(username.trim());
       onRegistrationComplete();
     } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert('Registration Failed', error.message);
-      } else {
-        Alert.alert('Registration Failed', 'An unexpected error occurred. Please try again.');
-      }
+      // The error will already be shown by the error handling utility
+      console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }

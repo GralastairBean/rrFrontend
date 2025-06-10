@@ -7,25 +7,25 @@ interface DjangoError {
 
 export const handleApiError = (error: unknown, fallbackMessage = 'An unexpected error occurred', showAlert = true): Error => {
   if (!error) {
-    if (showAlert) Alert.alert('Error', fallbackMessage);
+    if (showAlert) Alert.alert('Sorry', fallbackMessage);
     return new Error(fallbackMessage);
   }
 
   // Handle Axios errors
   if (isAxiosError(error)) {
     const message = extractErrorMessage(error);
-    if (showAlert) Alert.alert('Error', message);
+    if (showAlert) Alert.alert('Sorry', message);
     return new Error(message);
   }
 
   // Handle other errors
   if (error instanceof Error) {
-    if (showAlert) Alert.alert('Error', error.message);
+    if (showAlert) Alert.alert('Sorry', error.message);
     return error;
   }
 
   // Handle unknown errors
-  if (showAlert) Alert.alert('Error', fallbackMessage);
+  if (showAlert) Alert.alert('Sorry', fallbackMessage);
   return new Error(fallbackMessage);
 };
 
@@ -43,6 +43,11 @@ const extractErrorMessage = (error: AxiosError): string => {
 
   // Handle Django REST Framework error format
   if (data && typeof data === 'object') {
+    // Check for username already exists error
+    if ('username' in data && Array.isArray(data.username) && data.username[0]?.includes('already exists')) {
+      return 'This username is already taken. Please choose another one.';
+    }
+
     // Handle non-field errors
     if ('non_field_errors' in data) {
       const nonFieldErrors = data['non_field_errors'];

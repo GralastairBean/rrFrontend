@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 import { authService } from './services/authService';
+import { handleApiError } from './utils/errorHandling';
 
 // Define error response types
 interface TokenErrorResponse {
@@ -72,7 +73,7 @@ api.interceptors.request.use(
 );
 
 // Function to handle API errors
-const handleApiError = (error: unknown, customMessage?: string, showAlert = true) => {
+const logApiError = (error: unknown, customMessage?: string, showAlert = true) => {
   if (error instanceof Error) {
     const axiosError = error as AxiosError;
     if (axiosError.response) {
@@ -93,7 +94,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    if (!originalRequest) return Promise.reject(handleApiError(error, undefined, false));
+    if (!originalRequest) return Promise.reject(logApiError(error, undefined, false));
 
     // Check if the error is due to an invalid/expired token
     const isAccessTokenError = error.response?.status === 401;
@@ -132,7 +133,7 @@ api.interceptors.response.use(
       }
     }
     
-    return Promise.reject(handleApiError(error, undefined, false));
+    return Promise.reject(logApiError(error, undefined, false));
   }
 );
 
@@ -149,6 +150,6 @@ publicApi.interceptors.response.use(
     });
     // Don't show alerts for auth check failures
     const isAuthCheck = error.config?.url === '/api/checklists/';
-    return Promise.reject(handleApiError(error, undefined, !isAuthCheck));
+    return Promise.reject(handleApiError(error, 'An error occurred during registration', !isAuthCheck));
   }
 ); 
