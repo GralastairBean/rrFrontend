@@ -43,7 +43,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const [username, setUsername] = useState<string>('');
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
-  const [lastCalculatedRegretIndex, setLastCalculatedRegretIndex] = useState<number>(-1);
+  const [lastCalculatedRegretIndex, setLastCalculatedRegretIndex] = useState<number | null>(-1);
   const { theme } = useTheme();
   const themeColors = colors[theme];
   const appState = useRef(AppState.currentState);
@@ -180,17 +180,24 @@ function AppContent() {
       setChecklistLoading(isLoading);
       
       // Calculate and store the regret index when data is loaded
-      if (!isLoading && updatedRegrets.length > 0) {
-        const uncompletedCount = updatedRegrets.filter(r => !r.success).length;
-        const newIndex = Math.round((uncompletedCount / updatedRegrets.length) * 100);
-        setLastCalculatedRegretIndex(newIndex);
+      if (!isLoading) {
+        if (updatedRegrets.length === 0) {
+          setLastCalculatedRegretIndex(-1);
+        } else {
+          const uncompletedCount = updatedRegrets.filter(r => !r.success).length;
+          const newIndex = Math.round((uncompletedCount / updatedRegrets.length) * 100);
+          setLastCalculatedRegretIndex(newIndex);
+        }
+      } else {
+        // During loading, set to null to prevent flash
+        setLastCalculatedRegretIndex(null);
       }
     }
   };
 
   const calculateRegretIndex = () => {
     if (currentScreen === 'main') {
-      if (checklistLoading) return -1;
+      if (checklistLoading) return null;
       if (regrets.length === 0) return -1;
       const uncompletedCount = regrets.filter(r => !r.success).length;
       return Math.round((uncompletedCount / regrets.length) * 100);
@@ -199,8 +206,8 @@ function AppContent() {
     return lastCalculatedRegretIndex;
   };
 
-  const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
-    if (currentScreen === 'main' && (checklistLoading || regrets.length === 0)) return { text: '', color: themeColors.text, style: {} };
+  const formatRegretIndex = (index: number | null): { text: string; color: string; style: TextStyle } => {
+    if (index === null) return { text: '', color: themeColors.text, style: {} };
     if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
     return { text: `${index}%`, color: getRegretIndexColor(index), style: {} };
   };
@@ -233,9 +240,9 @@ function AppContent() {
           />
         );
       case 'history':
-        return <RegretHistory currentRegretIndex={regretIndex} />;
+        return <RegretHistory currentRegretIndex={regretIndex ?? -1} />;
       case 'network':
-        return <Network currentRegretIndex={regretIndex} />;
+        return <Network currentRegretIndex={regretIndex ?? -1} />;
       default:
         return (
           <View style={[styles.mainContent, { backgroundColor: themeColors.background }]}>
@@ -253,8 +260,8 @@ function AppContent() {
                 <Text style={[styles.dateText, { color: themeColors.text }]}>{formatDate(currentDate)}</Text>
                 <View style={styles.regretIndexContainer}>
                   {currentScreen === 'main' && (
-                    <Text style={[styles.subtitle, { color: formatRegretIndex(calculateRegretIndex()).color }]}>
-                      Regret Index: {formatRegretIndex(calculateRegretIndex()).text}
+                    <Text style={[styles.subtitle, { color: formatRegretIndex(regretIndex).color }]}>
+                      Regret Index: {formatRegretIndex(regretIndex).text}
                     </Text>
                   )}
                 </View>

@@ -11,7 +11,7 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
   }>({
     checklist: null,
     regrets: [],
-    loading: false,
+    loading: true,
     error: null
   });
   const [queryParams, setQueryParams] = useState<ChecklistQueryParams | undefined>(initialParams);
