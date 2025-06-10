@@ -253,7 +253,7 @@ function AppContent() {
                 <Text style={[styles.dateText, { color: themeColors.text }]}>{formatDate(currentDate)}</Text>
                 <View style={styles.regretIndexContainer}>
                   {currentScreen === 'main' && !checklistLoading && (
-                    <Text style={[styles.subtitle, { color: getRegretIndexColor(calculateRegretIndex()) }]}>
+                    <Text style={[styles.subtitle, { color: formatRegretIndex(calculateRegretIndex()).color }]}>
                       Regret Index: {formatRegretIndex(calculateRegretIndex()).text}
                     </Text>
                   )}
