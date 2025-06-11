@@ -135,8 +135,11 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
       }),
       datasets: [{
         data: chartData.map(day => day.regretIndex),
-        color: (opacity = 1) => themeColors.primary,
-        strokeWidth: 2
+        color: () => theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.3)',  // Semi-transparent gray based on theme
+        strokeWidth: 2,
+        withDots: true,
+        // Define colors for individual dots
+        dotColor: (dataPoint: number) => getRegretIndexColor(dataPoint)
       }]
     };
 
@@ -152,9 +155,16 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
       },
       propsForDots: {
         r: "4",
-        strokeWidth: "2",
-        stroke: themeColors.primary
-      }
+        strokeWidth: "2"
+      },
+      // Set fixed Y-axis range
+      min: 0,
+      max: 100,
+      // Customize Y-axis ticks
+      count: 5, // This will show ticks at 0, 25, 50, 75, 100
+      formatYLabel: (value: string) => `${value}`,
+      // Force Y-axis to use exact min/max values
+      segment: 4
     };
 
     return (
@@ -175,6 +185,8 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
           withShadow={false}
           yAxisLabel=""
           yAxisSuffix="%"
+          getDotColor={(dataPoint: number) => getRegretIndexColor(dataPoint)}
+          fromZero={true}
         />
       </View>
     );
