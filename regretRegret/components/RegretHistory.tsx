@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, ScrollView, TextStyle, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TextStyle, ActivityIndicator, Dimensions } from 'react-native';
+import { useState, useEffect, Fragment } from 'react';
 import { getRegretIndexColor } from '../App';
 import { useTheme, colors } from '../utils/ThemeContext';
 import { checklistService } from '../api/services/checklistService';
 import { Checklist } from '../api/types';
+import { LineChart } from 'react-native-chart-kit';
 
 interface DayHistory {
   date: Date;
@@ -16,12 +17,6 @@ interface RegretHistoryProps {
 }
 
 const formatDate = (date: Date) => {
-  const today = new Date();
-  
-  if (date.toDateString() === today.toDateString()) {
-    return 'Today';
-  }
-
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   
@@ -68,7 +63,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         
         // Get date 30 days ago
         const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 29);  // -29 because we want today + 29 previous days = 30 total
+        thirtyDaysAgo.setDate(today.getDate() - 30);  // -30 to get 30 days of history
         
         // Format dates for API
         const startDate = thirtyDaysAgo.toISOString().split('T')[0];
@@ -83,21 +78,12 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         // Create array of days with valid data
         const days: DayHistory[] = [];
         
-        // Add today with current regret index if it's valid
-        if (currentRegretIndex !== -1) {
-          days.push({
-            date: today,
-            regretIndex: currentRegretIndex,
-            score: null  // Today's score might not be calculated yet
-          });
-        }
-        
         // Add days with valid data from checklists
         checklists.forEach(checklist => {
           const checklistDate = new Date(checklist.created_at);
           checklistDate.setHours(0, 0, 0, 0);  // Reset time part
           
-          // Skip if it's today (we already added today's data)
+          // Skip if it's today
           if (checklistDate.toDateString() === today.toDateString()) {
             return;
           }
@@ -126,18 +112,79 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
     };
 
     fetchHistoricalData();
-  }, [currentRegretIndex]);
+  }, []);
 
-  // Calculate averages excluding today
-  const numPreviousDays = Math.max(0, historyData.length - 1); // Subtract today
-  const previousDaysAverage = calculateAverageIndex(historyData, numPreviousDays);
-  const sevenDayAverage = calculateAverageIndex(historyData, Math.min(7, numPreviousDays));
+  // Calculate average
+  const numDays = historyData.length;
+  const averageIndex = calculateAverageIndex(historyData, numDays);
+
+  const renderChart = () => {
+    if (historyData.length === 0) return null;
+
+    // Reverse the data to show oldest to newest (left to right)
+    const chartData = [...historyData].reverse();
+    
+    // Prepare data for the chart
+    const data = {
+      labels: chartData.map((day, index) => {
+        // Show fewer labels to prevent overcrowding
+        if (index % Math.ceil(chartData.length / 5) === 0) {
+          return day.date.getDate().toString();
+        }
+        return '';
+      }),
+      datasets: [{
+        data: chartData.map(day => day.regretIndex),
+        color: (opacity = 1) => themeColors.primary,
+        strokeWidth: 2
+      }]
+    };
+
+    const chartConfig = {
+      backgroundColor: themeColors.background,
+      backgroundGradientFrom: themeColors.background,
+      backgroundGradientTo: themeColors.background,
+      decimalPlaces: 0,
+      color: (opacity = 1) => themeColors.text,
+      labelColor: (opacity = 1) => themeColors.text,
+      style: {
+        borderRadius: 16
+      },
+      propsForDots: {
+        r: "4",
+        strokeWidth: "2",
+        stroke: themeColors.primary
+      }
+    };
+
+    return (
+      <View style={styles.chartContainer}>
+        <LineChart
+          data={data}
+          width={Dimensions.get("window").width - 40}
+          height={220}
+          chartConfig={chartConfig}
+          bezier
+          style={{
+            marginVertical: 8,
+            borderRadius: 16
+          }}
+          withVerticalLines={false}
+          withHorizontalLines={true}
+          withDots={true}
+          withShadow={false}
+          yAxisLabel=""
+          yAxisSuffix="%"
+        />
+      </View>
+    );
+  };
 
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: themeColors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: themeColors.primary }]}>Regret Index History</Text>
+          <Text style={[styles.title, { color: themeColors.primary }]}>Regret History</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={themeColors.primary} />
@@ -151,7 +198,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
     return (
       <View style={[styles.container, { backgroundColor: themeColors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: themeColors.primary }]}>Regret Index History</Text>
+          <Text style={[styles.title, { color: themeColors.primary }]}>Regret History</Text>
         </View>
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
@@ -163,36 +210,20 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: themeColors.primary }]}>Regret Index History</Text>
+        <Text style={[styles.title, { color: themeColors.primary }]}>Regret History</Text>
         
         <View style={styles.statsContainer}>
-          {numPreviousDays > 0 && (
+          {numDays > 0 && (
             <View style={styles.statItem}>
               <View style={styles.statRow}>
                 <Text style={[styles.statLabel, { color: themeColors.text }]}>
-                  Average (Last {numPreviousDays} Day{numPreviousDays !== 1 ? 's' : ''}):
+                  Average (Last {numDays} Day{numDays !== 1 ? 's' : ''}):
                 </Text>
                 <Text style={[
                   styles.statValue,
-                  { color: getRegretIndexColor(previousDaysAverage) }
+                  { color: getRegretIndexColor(averageIndex) }
                 ]}>
-                  {previousDaysAverage === -1 ? 'N/A' : `${previousDaysAverage}%`}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {numPreviousDays >= 2 && (
-            <View style={styles.statItem}>
-              <View style={styles.statRow}>
-                <Text style={[styles.statLabel, { color: themeColors.text }]}>
-                  7 Day Average:
-                </Text>
-                <Text style={[
-                  styles.statValue,
-                  { color: getRegretIndexColor(sevenDayAverage) }
-                ]}>
-                  {sevenDayAverage === -1 ? 'N/A' : `${sevenDayAverage}%`}
+                  {averageIndex === -1 ? 'N/A' : `${averageIndex}%`}
                 </Text>
               </View>
             </View>
@@ -202,48 +233,51 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
           {historyData.length === 0 
             ? 'No history available yet' 
-            : historyData.length === 1 
-              ? 'Showing today only' 
-              : `Showing today + ${numPreviousDays} previous day${numPreviousDays !== 1 ? 's' : ''}`
+            : `Last ${numDays} day${numDays !== 1 ? 's' : ''} of history`
           }
         </Text>
       </View>
 
-      {historyData.length > 0 ? (
-        <ScrollView style={styles.content}>
-          {historyData.map((day, index) => {
-            const { text, color, style } = formatRegretIndex(day.regretIndex);
-            const isWeekendDay = isWeekend(day.date);
-            return (
-              <View 
-                key={index} 
-                style={[
-                  styles.dayItem, 
-                  { 
-                    borderBottomColor: themeColors.border,
-                    backgroundColor: isWeekendDay 
-                      ? theme === 'dark' 
-                        ? 'rgba(255, 255, 255, 0.03)' // Slightly lighter in dark mode
-                        : 'rgba(0, 0, 0, 0.02)' // Slightly darker in light mode
-                      : 'transparent'
-                  }
-                ]}
-              >
-                <Text style={[
-                  styles.dateText, 
-                  { color: themeColors.text },
-                  isWeekendDay && styles.weekendText
-                ]}>
-                  {formatDate(day.date)}
-                </Text>
-                <Text style={[styles.indexText, { color }, style]}>
-                  {text}
-                </Text>
-              </View>
-            );
-          })}
-        </ScrollView>
-      ) : (
+      {historyData.length > 0 && (
+        <Fragment>
+          {renderChart()}
+          <ScrollView style={styles.content}>
+            {historyData.map((day, index) => {
+              const { text, color, style } = formatRegretIndex(day.regretIndex);
+              const isWeekendDay = isWeekend(day.date);
+              return (
+                <View 
+                  key={index} 
+                  style={[
+                    styles.dayItem, 
+                    { 
+                      borderBottomColor: themeColors.border,
+                      backgroundColor: isWeekendDay 
+                        ? theme === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.03)' // Slightly lighter in dark mode
+                          : 'rgba(0, 0, 0, 0.02)' // Slightly darker in light mode
+                        : 'transparent'
+                    }
+                  ]}
+                >
+                  <Text style={[
+                    styles.dateText, 
+                    { color: themeColors.text },
+                    isWeekendDay && styles.weekendText
+                  ]}>
+                    {formatDate(day.date)}
+                  </Text>
+                  <Text style={[styles.indexText, { color }, style]}>
+                    {text}
+                  </Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </Fragment>
+      )}
+
+      {historyData.length === 0 && (
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>
             Start completing your daily regrets to build up your history
@@ -346,5 +380,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  chartContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    alignItems: 'center'
   },
 }); 
