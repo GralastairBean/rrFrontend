@@ -102,11 +102,12 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
             return;
           }
           
+          // Use the score directly from the checklist
           const scoreNum = parseFloat(checklist.score);
           if (!isNaN(scoreNum)) {
             days.push({
               date: checklistDate,
-              regretIndex: Math.round(scoreNum),
+              regretIndex: Math.round(scoreNum * 100), // Convert decimal score to percentage
               score: checklist.score
             });
           }
