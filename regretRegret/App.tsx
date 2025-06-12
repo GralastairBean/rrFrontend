@@ -252,7 +252,7 @@ function AppContent() {
             
             <View style={styles.subheaderInfo}>
               <Image 
-                source={require('./assets/frog_2.jpeg')}
+                source={require('./assets/frogCircle_2.png')}
                 style={styles.frogImage}
                 resizeMode="contain"
               />
