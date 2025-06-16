@@ -14,7 +14,8 @@ export const authService = {
       console.log('🔐 Starting registration for username:', username);
       
       const response = await publicApi.post<User>('/auth/user/', {
-        username: username.trim()
+        username: username.trim(),
+        action: 'register'
       });
       
       if (!response.data?.tokens) {
@@ -204,5 +205,32 @@ export const authService = {
 
   async logout(): Promise<void> {
     await this.clearAuth();
+  },
+
+  async login(username: string): Promise<void> {
+    try {
+      console.log('🔐 Attempting login for username:', username);
+      
+      const response = await publicApi.post<User>('/auth/user/', {
+        username: username.trim(),
+        action: 'login'
+      });
+      
+      if (!response.data?.tokens) {
+        throw new Error('No tokens received from login');
+      }
+
+      const { tokens } = response.data;
+      if (!tokens.access || !tokens.refresh) {
+        throw new Error('Invalid token format received');
+      }
+      
+      await this.storeAuthData(tokens, username);
+      api.defaults.headers.common['Authorization'] = `Bearer ${tokens.access}`;
+      console.log('✅ Login complete');
+    } catch (error) {
+      console.error('❌ Login failed:', error);
+      throw error;
+    }
   }
 }; 

@@ -14,7 +14,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
-  const handleRegister = async () => {
+  const handleSubmit = async () => {
     if (username.trim().length === 0) {
       Alert.alert('Sorry', 'Please enter a username');
       return;
@@ -22,11 +22,24 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
 
     setIsLoading(true);
     try {
-      await authService.register(username.trim());
-      onRegistrationComplete();
+      // First try to log in
+      try {
+        await authService.login(username.trim());
+        onRegistrationComplete();
+        return;
+      } catch (loginError: any) {
+        // If login fails with "user not found", try to register
+        if (loginError?.response?.status === 404) {
+          await authService.register(username.trim());
+          onRegistrationComplete();
+          return;
+        }
+        // If it's any other error, rethrow it
+        throw loginError;
+      }
     } catch (error) {
       // The error will already be shown by the error handling utility
-      console.error('Registration error:', error);
+      console.error('Authentication error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -44,6 +57,9 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       />
       
       <View style={styles.form}>
+        <Text style={[styles.message, { color: themeColors.text }]}>
+          Enter a username to register or log in
+        </Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: themeColors.surface,
@@ -52,7 +68,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
           }]}
           value={username}
           onChangeText={setUsername}
-          placeholder="Choose a username to begin"
+          placeholder="Enter your username"
           placeholderTextColor={themeColors.textSecondary}
           autoCapitalize="none"
           autoCorrect={false}
@@ -70,14 +86,14 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
               }
             ]
           ]} 
-          onPress={handleRegister}
+          onPress={handleSubmit}
           disabled={username.trim().length === 0 || isLoading}
         >
           <Text style={[
             styles.buttonText,
             (username.trim().length === 0 || isLoading) && { color: themeColors.textSecondary }
           ]}>
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? 'Signing in...' : 'Continue'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -103,6 +119,12 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
     maxWidth: 400,
+  },
+  message: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
   },
   input: {
     height: 48,

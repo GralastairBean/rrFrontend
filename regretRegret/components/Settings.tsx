@@ -18,15 +18,15 @@ export default function Settings({ username, onLogout }: SettingsProps) {
 
   const handleLogoutPress = () => {
     Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This action is irreversable and will erase your regret history.',
+      'Log Out',
+      'Are you sure you want to log out?',
       [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Yes, Delete',
+          text: 'Yes, Log Out',
           onPress: onLogout,
           style: 'destructive',
         },
@@ -145,7 +145,7 @@ export default function Settings({ username, onLogout }: SettingsProps) {
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
-          <Text style={styles.logoutButtonText}>Delete Account</Text>
+          <Text style={styles.logoutButtonText}>Log Out</Text>
         </TouchableOpacity>
       </View>
     </View>
