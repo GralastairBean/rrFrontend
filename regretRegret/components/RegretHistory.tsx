@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TextStyle, ActivityIndicator, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TextStyle, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
 import { useState, useEffect, Fragment } from 'react';
 import { getRegretIndexColor } from '../App';
 import { useTheme, colors } from '../utils/ThemeContext';
@@ -15,6 +15,8 @@ interface DayHistory {
 interface RegretHistoryProps {
   currentRegretIndex: number;
 }
+
+type TimePeriod = 7 | 14 | 30;
 
 const formatDate = (date: Date) => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -49,6 +51,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
   const [historyData, setHistoryData] = useState<DayHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(30);
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
@@ -61,18 +64,18 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         // Get today's date
         const today = new Date();
         
-        // Get date 30 days ago
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);  // -30 to get 30 days of history
+        // Get date X days ago based on selected period
+        const startDate = new Date();
+        startDate.setDate(today.getDate() - selectedPeriod);
         
         // Format dates for API
-        const startDate = thirtyDaysAgo.toISOString().split('T')[0];
-        const endDate = today.toISOString().split('T')[0];
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = today.toISOString().split('T')[0];
         
         // Fetch checklists for the date range
         const checklists = await checklistService.getChecklists({
-          created_at_after: startDate,
-          created_at_before: endDate
+          created_at_after: startDateStr,
+          created_at_before: endDateStr
         });
         
         // Create array of days with valid data
@@ -102,8 +105,8 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         // Sort days by date (most recent first)
         days.sort((a, b) => b.date.getTime() - a.date.getTime());
         
-        // Take only the first 30 days
-        setHistoryData(days.slice(0, 30));
+        // Take only the selected period days
+        setHistoryData(days.slice(0, selectedPeriod));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch history data');
       } finally {
@@ -112,7 +115,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
     };
 
     fetchHistoricalData();
-  }, []);
+  }, [selectedPeriod]); // Add selectedPeriod as a dependency
 
   // Calculate average
   const numDays = historyData.length;
@@ -224,6 +227,48 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
       <View style={styles.header}>
         <Text style={[styles.title, { color: themeColors.primary }]}>Regret History</Text>
         
+        <View style={styles.periodSelector}>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              selectedPeriod === 7 && styles.selectedPeriodButton,
+              { backgroundColor: selectedPeriod === 7 ? themeColors.primary : themeColors.surface }
+            ]}
+            onPress={() => setSelectedPeriod(7)}
+          >
+            <Text style={[
+              styles.periodButtonText,
+              { color: selectedPeriod === 7 ? themeColors.buttonText : themeColors.text }
+            ]}>7 Days</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              selectedPeriod === 14 && styles.selectedPeriodButton,
+              { backgroundColor: selectedPeriod === 14 ? themeColors.primary : themeColors.surface }
+            ]}
+            onPress={() => setSelectedPeriod(14)}
+          >
+            <Text style={[
+              styles.periodButtonText,
+              { color: selectedPeriod === 14 ? themeColors.buttonText : themeColors.text }
+            ]}>14 Days</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              selectedPeriod === 30 && styles.selectedPeriodButton,
+              { backgroundColor: selectedPeriod === 30 ? themeColors.primary : themeColors.surface }
+            ]}
+            onPress={() => setSelectedPeriod(30)}
+          >
+            <Text style={[
+              styles.periodButtonText,
+              { color: selectedPeriod === 30 ? themeColors.buttonText : themeColors.text }
+            ]}>30 Days</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.statsContainer}>
           {numDays > 0 && (
             <View style={styles.statItem}>
@@ -397,5 +442,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
     alignItems: 'center'
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 15,
+    gap: 8,
+  },
+  periodButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  selectedPeriodButton: {
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  periodButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 
