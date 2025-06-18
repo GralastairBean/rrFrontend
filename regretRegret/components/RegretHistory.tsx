@@ -5,6 +5,16 @@ import { useTheme, colors } from '../utils/ThemeContext';
 import { checklistService } from '../api/services/checklistService';
 import { Checklist } from '../api/types';
 import { LineChart } from 'react-native-chart-kit';
+import { 
+  utcToLocalDate, 
+  getStartOfDay, 
+  getEndOfDay, 
+  localToUtcISO, 
+  isSameDay, 
+  getDaysAgo, 
+  formatHistoryDate, 
+  isWeekend 
+} from '../utils/dateUtils';
 
 interface DayHistory {
   date: Date;
@@ -17,18 +27,6 @@ interface RegretHistoryProps {
 }
 
 type TimePeriod = 7 | 14 | 30;
-
-const formatDate = (date: Date) => {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  
-  return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
-};
-
-const isWeekend = (date: Date) => {
-  const day = date.getDay();
-  return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
-};
 
 const formatRegretIndex = (index: number): { text: string; color: string; style: TextStyle } => {
   if (index === -1) return { text: 'SLACKER', color: '#f44336', style: { fontWeight: 'bold' } };
@@ -61,16 +59,15 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         setLoading(true);
         setError(null);
         
-        // Get today's date
-        const today = new Date();
+        // Get today's date in local timezone
+        const today = getStartOfDay(new Date());
         
         // Get date X days ago based on selected period
-        const startDate = new Date();
-        startDate.setDate(today.getDate() - selectedPeriod);
+        const startDate = getDaysAgo(selectedPeriod);
         
-        // Format dates for API
-        const startDateStr = startDate.toISOString().split('T')[0];
-        const endDateStr = today.toISOString().split('T')[0];
+        // Convert to UTC ISO strings for API request
+        const startDateStr = localToUtcISO(startDate);
+        const endDateStr = localToUtcISO(getEndOfDay(today));
         
         // Fetch checklists for the date range
         const checklists = await checklistService.getChecklists({
@@ -83,11 +80,12 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
         
         // Add days with valid data from checklists
         checklists.forEach(checklist => {
-          const checklistDate = new Date(checklist.created_at);
-          checklistDate.setHours(0, 0, 0, 0);  // Reset time part
+          // Convert UTC date from backend to local date
+          const checklistLocalDate = utcToLocalDate(checklist.created_at);
+          const checklistDateStart = getStartOfDay(checklistLocalDate);
           
           // Skip if it's today
-          if (checklistDate.toDateString() === today.toDateString()) {
+          if (isSameDay(checklistDateStart, today)) {
             return;
           }
           
@@ -95,7 +93,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
           const scoreNum = parseFloat(checklist.score);
           if (!isNaN(scoreNum)) {
             days.push({
-              date: checklistDate,
+              date: checklistDateStart,
               regretIndex: Math.round(scoreNum * 100), // Convert decimal score to percentage
               score: checklist.score
             });
@@ -322,7 +320,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
                     { color: themeColors.text },
                     isWeekendDay && styles.weekendText
                   ]}>
-                    {formatDate(day.date)}
+                    {formatHistoryDate(day.date)}
                   </Text>
                   <Text style={[styles.indexText, { color }, style]}>
                     {text}
