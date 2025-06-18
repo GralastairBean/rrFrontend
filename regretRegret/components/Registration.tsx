@@ -51,15 +51,12 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       style={[styles.container, { backgroundColor: themeColors.background }]}
     >
       <Image 
-        source={require('../assets/frog_1.png')}
+        source={require('../assets/frogCircle_2.png')}
         style={styles.frogImage}
         resizeMode="contain"
       />
       
       <View style={styles.form}>
-        <Text style={[styles.message, { color: themeColors.text }]}>
-          Enter a username to register or log in
-        </Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: themeColors.surface,
@@ -68,7 +65,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
           }]}
           value={username}
           onChangeText={setUsername}
-          placeholder="Enter your username"
+          placeholder="enter a username to begin"
           placeholderTextColor={themeColors.textSecondary}
           autoCapitalize="none"
           autoCorrect={false}
@@ -110,7 +107,7 @@ const styles = StyleSheet.create({
   },
   frogImage: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 246,
     height: undefined,
     aspectRatio: 1,
     marginBottom: 5,
