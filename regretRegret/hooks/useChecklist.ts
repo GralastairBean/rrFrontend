@@ -203,10 +203,9 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
     }
   }, [state.checklist, state.regrets]);
 
-  // Fetch checklist on mount and when query params change
-  useEffect(() => {
-    fetchChecklists(queryParams);
-  }, [fetchChecklists, queryParams]);
+  // Note: Removed automatic fetchChecklists on mount to prevent redundant data fetching
+  // The Checklist component already calls getTodayChecklist on mount, which is the preferred method
+  // for getting today's checklist. fetchChecklists is still available for manual calls when needed.
 
   return {
     checklist: state.checklist,
