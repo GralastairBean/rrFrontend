@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { checklistService, ChecklistQueryParams } from '../api/services/checklistService';
 import { Checklist, Regret, CreateRegretRequest } from '../api/types';
+import { getLocalDateTimeWithTimezone } from '../utils/datetime';
 
 export const useChecklist = (initialParams?: ChecklistQueryParams) => {
   const [state, setState] = useState<{
@@ -62,6 +63,36 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
     }
   }, []);
 
+  // Get or create today's checklist using POST request
+  const getTodayChecklist = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      
+      // Get current local datetime with timezone
+      const localDatetime = getLocalDateTimeWithTimezone();
+      
+      const checklist = await checklistService.createOrGetTodayChecklist(localDatetime);
+      const checklistRegrets = await checklistService.getChecklistRegrets(checklist.id);
+      
+      if (isMounted.current) {
+        setState({
+          checklist: checklist,
+          regrets: checklistRegrets,
+          loading: false,
+          error: null
+        });
+      }
+    } catch (err) {
+      if (isMounted.current) {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: err instanceof Error ? err.message : 'Failed to get today\'s checklist'
+        }));
+      }
+    }
+  }, []);
+
   // Update query parameters and fetch checklists
   const updateFilters = useCallback((newParams: ChecklistQueryParams) => {
     setQueryParams(newParams);
@@ -90,8 +121,12 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
         error: null
       }));
       
+      // Get current local datetime with timezone for the creation
+      const localDatetime = getLocalDateTimeWithTimezone();
+      
       const createdRegret = await checklistService.createRegret(state.checklist.id, {
-        description
+        description,
+        local_datetime: localDatetime
       });
       
       if (isMounted.current) {
@@ -138,8 +173,12 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
         )
       }));
       
+      // Get current local datetime with timezone for the update
+      const localDatetime = getLocalDateTimeWithTimezone();
+      
       const updatedRegret = await checklistService.updateRegret(state.checklist.id, regretId, {
-        success: !regret.success
+        success: !regret.success,
+        local_datetime: localDatetime
       });
       
       if (isMounted.current) {
@@ -177,6 +216,7 @@ export const useChecklist = (initialParams?: ChecklistQueryParams) => {
     createRegret,
     toggleRegretSuccess,
     updateFilters,
-    refreshChecklist: () => fetchChecklists(queryParams)
+    refreshChecklist: () => fetchChecklists(queryParams),
+    getTodayChecklist
   };
 }; 

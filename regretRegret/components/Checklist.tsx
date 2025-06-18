@@ -115,16 +115,21 @@ const RegretItem = memo(({
 const Checklist = ({ onRegretsUpdate, shouldRefresh }: ChecklistProps) => {
   const [newRegret, setNewRegret] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { checklist, regrets, loading, error, createRegret, toggleRegretSuccess, refreshChecklist } = useChecklist({ today: true });
+  const { checklist, regrets, loading, error, createRegret, toggleRegretSuccess, refreshChecklist, getTodayChecklist } = useChecklist();
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
   useEffect(() => {
+    // Use the new POST method to get today's checklist on component mount
+    getTodayChecklist();
+  }, [getTodayChecklist]);
+
+  useEffect(() => {
     if (shouldRefresh) {
       console.log('🔄 Refreshing checklist due to app focus');
-      refreshChecklist();
+      getTodayChecklist();
     }
-  }, [shouldRefresh, refreshChecklist]);
+  }, [shouldRefresh, getTodayChecklist]);
 
   useEffect(() => {
     if (onRegretsUpdate) {

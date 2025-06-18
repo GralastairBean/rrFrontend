@@ -56,6 +56,13 @@ export interface Regret {
 
 export interface CreateRegretRequest {
   description: string;
+  local_datetime?: string; // Include timezone for regret creation
+}
+
+export interface UpdateRegretRequest {
+  description?: string;
+  success?: boolean;
+  local_datetime?: string; // Include timezone for regret updates
 }
 
 export interface PatchedRegret {
@@ -79,4 +86,8 @@ export interface CreateTaskRequest {
 export interface UpdateTaskRequest {
   text?: string;
   completed?: boolean;
+}
+
+export interface CreateChecklistRequest {
+  local_datetime: string;
 } 
