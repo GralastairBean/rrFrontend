@@ -1,6 +1,5 @@
-import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image, Platform, Pressable, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image } from 'react-native';
 import { useState } from 'react';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme, colors } from '../utils/ThemeContext';
 
 interface SettingsProps {
@@ -10,9 +9,6 @@ interface SettingsProps {
 
 export default function Settings({ username, onLogout }: SettingsProps) {
   const [sendDailyCroak, setSendDailyCroak] = useState(false);
-  const [endOfDay, setEndOfDay] = useState(new Date(new Date().setHours(23, 59)));
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [tempTime, setTempTime] = useState(new Date());
   const { theme, toggleTheme } = useTheme();
   const themeColors = colors[theme];
 
@@ -33,34 +29,6 @@ export default function Settings({ username, onLogout }: SettingsProps) {
       ],
       { cancelable: false }
     );
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  const handleTimeChange = (event: any, selectedDate?: Date) => {
-    if (selectedDate) {
-      setTempTime(selectedDate);
-    }
-  };
-
-  const handleOpenTimePicker = () => {
-    setTempTime(endOfDay);
-    setShowTimePicker(true);
-  };
-
-  const handleConfirmTime = () => {
-    setEndOfDay(tempTime);
-    setShowTimePicker(false);
-  };
-
-  const handleCancelTime = () => {
-    setShowTimePicker(false);
   };
 
   return (
@@ -100,48 +68,6 @@ export default function Settings({ username, onLogout }: SettingsProps) {
           thumbColor={sendDailyCroak ? '#fff' : '#f4f3f4'}
         />
       </View>
-
-      <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
-        <Text style={[styles.settingLabel, { color: themeColors.text }]}>End of Day</Text>
-        <Pressable onPress={handleOpenTimePicker} style={[styles.timeButton, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-          <Text style={[styles.timeText, { color: themeColors.primary }]}>{formatTime(endOfDay)}</Text>
-        </Pressable>
-      </View>
-
-      <Modal
-        visible={showTimePicker}
-        transparent={true}
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-            <Text style={[styles.modalTitle, { color: themeColors.primary }]}>Select End of Day Time</Text>
-            <DateTimePicker
-              value={tempTime}
-              mode="time"
-              is24Hour={false}
-              display="spinner"
-              onChange={handleTimeChange}
-              style={styles.timePicker}
-              textColor={themeColors.text}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]} 
-                onPress={handleCancelTime}
-              >
-                <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.confirmButton]} 
-                onPress={handleConfirmTime}
-              >
-                <Text style={styles.confirmButtonText}>Confirm</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
@@ -204,75 +130,6 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-  },
-  timeButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  timeText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    margin: 20,
-    borderRadius: 15,
-    padding: 25,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    maxWidth: '85%',
-    borderWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    marginBottom: 20,
-  },
-  timePicker: {
-    height: 200,
-    width: '100%',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 20,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  confirmButton: {
-    backgroundColor: '#4CAF50',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  confirmButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
   },
   footer: {
     position: 'absolute',
