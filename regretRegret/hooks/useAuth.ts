@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { authService } from '../../src/api/services/authService';
-import { TokenObtainPairRequest } from '../../src/api/types';
+import { authService } from '../api/services/authService';
+import { TokenObtainPairRequest } from '../api/types';
 
 export const useAuth = () => {
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,8 +15,8 @@ export const useAuth = () => {
   const checkAuthState = async () => {
     try {
       setIsLoading(true);
-      const email = await authService.getUserEmail();
-      setUserEmail(email);
+      const storedUsername = await authService.getStoredUsername();
+      setUsername(storedUsername);
     } catch (err) {
       setError('Failed to check auth state');
     } finally {
@@ -24,19 +24,19 @@ export const useAuth = () => {
     }
   };
 
-  // Login with email and password
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  // Login with username and password
+  const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       setError(null);
 
       const credentials: TokenObtainPairRequest = {
-        email,
+        username,
         password
       };
 
-      await authService.login(credentials);
-      setUserEmail(email);
+      await authService.login(username);
+      setUsername(username);
       return true;
     } catch (err) {
       setError('Login failed. Please check your credentials.');
@@ -52,7 +52,7 @@ export const useAuth = () => {
       setIsLoading(true);
       setError(null);
       await authService.clearAuth();
-      setUserEmail(null);
+      setUsername(null);
     } catch (err) {
       setError('Logout failed');
     } finally {
@@ -61,8 +61,8 @@ export const useAuth = () => {
   }, []);
 
   return {
-    userEmail,
-    isAuthenticated: !!userEmail,
+    username,
+    isAuthenticated: !!username,
     isLoading,
     error,
     login,
