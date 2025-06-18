@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image } from 'react-native';
 import { useState } from 'react';
 import { useTheme, colors } from '../utils/ThemeContext';
+import { getTimezoneInfo } from '../utils/datetime';
 
 interface SettingsProps {
   username: string;
@@ -47,6 +48,13 @@ export default function Settings({ username, onLogout }: SettingsProps) {
           />
           <Text style={[styles.username, { color: themeColors.text }]}>{username}</Text>
         </View>
+      </View>
+
+      <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+        <Text style={[styles.settingLabel, { color: themeColors.text }]}>Timezone</Text>
+        <Text style={[styles.timezoneValue, { color: themeColors.textSecondary }]}>
+          {getTimezoneInfo()}
+        </Text>
       </View>
 
       <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
@@ -130,6 +138,12 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
+  },
+  timezoneValue: {
+    fontSize: 14,
+    textAlign: 'right',
+    flex: 1,
+    marginLeft: 10,
   },
   footer: {
     position: 'absolute',
