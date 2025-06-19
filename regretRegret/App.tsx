@@ -66,14 +66,6 @@ function AppContent() {
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDate(new Date());
-    }, 60000); // Update every minute
-
-    return () => clearInterval(timer);
-  }, []);
-
   // Monitor app state changes
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextAppState => {
