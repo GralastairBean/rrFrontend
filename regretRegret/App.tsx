@@ -83,8 +83,9 @@ function AppContent() {
         nextAppState === 'active' &&
         isAuthenticated
       ) {
-        // App has come to foreground
-        console.log('📱 App came to foreground, triggering refresh');
+        // App has come to foreground - update date and trigger checklist refresh
+        console.log('📱 App came to foreground, updating date and triggering refresh');
+        setCurrentDate(new Date()); // Update date to match what we'll send to backend
         setShouldRefreshChecklist(true);
       }
       appState.current = nextAppState;
