@@ -240,7 +240,7 @@ function AppContent() {
         return (
           <View style={[styles.mainContent, { backgroundColor: themeColors.background }]}>
             <View style={styles.header}>
-              <Text style={[styles.title, { color: themeColors.primary }]}>Regret Regret</Text>
+              <Text style={[styles.title, { color: themeColors.primary }]}>Today's Regret Regrets</Text>
             </View>
             
             <View style={styles.subheaderInfo}>
