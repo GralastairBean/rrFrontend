@@ -13,6 +13,16 @@ export default function Settings({ username, onLogout }: SettingsProps) {
   const { theme, toggleTheme } = useTheme();
   const themeColors = colors[theme];
 
+  // Safe timezone info getter with fallback
+  const getSafeTimezoneInfo = (): string => {
+    try {
+      return getTimezoneInfo();
+    } catch (error) {
+      console.warn('Failed to get timezone info:', error);
+      return 'UTC+00:00 (Manual Timezone)';
+    }
+  };
+
   const handleLogoutPress = () => {
     Alert.alert(
       'Log Out',
@@ -53,7 +63,7 @@ export default function Settings({ username, onLogout }: SettingsProps) {
       <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
         <Text style={[styles.settingLabel, { color: themeColors.text }]}>Timezone</Text>
         <Text style={[styles.timezoneValue, { color: themeColors.textSecondary }]}>
-          {getTimezoneInfo()}
+          {getSafeTimezoneInfo()}
         </Text>
       </View>
 

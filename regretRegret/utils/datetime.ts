@@ -52,9 +52,20 @@ export const getTimezoneInfo = (): string => {
   // Try to get timezone name (this may not work in all environments)
   let timezoneName = '';
   try {
-    timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Check if Intl is available and working
+    if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+      const options = Intl.DateTimeFormat().resolvedOptions();
+      if (options && options.timeZone && options.timeZone !== 'UTC') {
+        timezoneName = options.timeZone;
+      } else {
+        timezoneName = 'Manual Timezone';
+      }
+    } else {
+      timezoneName = 'Manual Timezone';
+    }
   } catch (error) {
-    timezoneName = 'Unknown';
+    console.warn('Failed to get timezone name:', error);
+    timezoneName = 'Manual Timezone';
   }
   
   return `UTC${offsetString} (${timezoneName})`;
@@ -68,4 +79,26 @@ export const getLocalDate = (): string => {
   return now.getFullYear() + '-' +
     (now.getMonth() + 1).toString().padStart(2, '0') + '-' +
     now.getDate().toString().padStart(2, '0');
+};
+
+/**
+ * Test function to verify timezone handling works with manual timezone settings
+ * This can be called to test the fix for manual timezone crashes
+ */
+export const testTimezoneHandling = (): void => {
+  console.log('🧪 Testing Timezone Handling...');
+  
+  try {
+    const timezoneInfo = getTimezoneInfo();
+    console.log('✅ Timezone info retrieved successfully:', timezoneInfo);
+  } catch (error) {
+    console.error('❌ Timezone info failed:', error);
+  }
+  
+  try {
+    const localDateTime = getLocalDateTimeWithTimezone();
+    console.log('✅ Local datetime retrieved successfully:', localDateTime);
+  } catch (error) {
+    console.error('❌ Local datetime failed:', error);
+  }
 }; 
