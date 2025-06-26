@@ -51,7 +51,7 @@ export default function Registration({ onRegistrationComplete }: RegistrationPro
       style={[styles.container, { backgroundColor: themeColors.background }]}
     >
       <Image 
-        source={require('../assets/frogCircle_2.png')}
+        source={require('../assets/log_in_1.png')}
         style={styles.frogImage}
         resizeMode="contain"
       />
