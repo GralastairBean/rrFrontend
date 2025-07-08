@@ -1,10 +1,12 @@
 import { StyleSheet, Text, View, ScrollView, TextStyle, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
 import { useState, useEffect, Fragment } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getRegretIndexColor } from '../App';
 import { useTheme, colors } from '../utils/ThemeContext';
 import { checklistService } from '../api/services/checklistService';
 import { Checklist } from '../api/types';
 import { LineChart } from 'react-native-chart-kit';
+import HistoryPopup from './HistoryPopup';
 import { 
   utcToLocalDate, 
   getStartOfDay, 
@@ -50,8 +52,33 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(7);
+  const [showHistoryPopup, setShowHistoryPopup] = useState(false);
   const { theme } = useTheme();
   const themeColors = colors[theme];
+
+  useEffect(() => {
+    const checkHistoryPopupStatus = async () => {
+      try {
+        const hasSeenHistory = await AsyncStorage.getItem('hasSeenHistory');
+        if (!hasSeenHistory) {
+          setShowHistoryPopup(true);
+        }
+      } catch (error) {
+        console.error('Failed to check history popup status:', error);
+      }
+    };
+
+    checkHistoryPopupStatus();
+  }, []);
+
+  const handleHistoryPopupClose = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenHistory', 'true');
+      setShowHistoryPopup(false);
+    } catch (error) {
+      console.error('Failed to save history popup status:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchHistoricalData = async () => {
@@ -348,6 +375,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
           </Text>
         </View>
       )}
+      <HistoryPopup visible={showHistoryPopup} onClose={handleHistoryPopupClose} />
     </View>
   );
 }

@@ -146,6 +146,7 @@ function AppContent() {
       await authService.logout();
       await AsyncStorage.removeItem('hasSeenWelcome');
       await AsyncStorage.removeItem('hasSeenRegretConfirmation');
+      await AsyncStorage.removeItem('hasSeenHistory');
       setIsAuthenticated(false);
       setUsername('');
       setCurrentScreen('main');
