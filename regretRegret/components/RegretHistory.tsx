@@ -75,36 +75,45 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
           created_at_before: endDateStr
         });
         
-        // Create array of days with valid data
-        const days: DayHistory[] = [];
-        
-        // Add days with valid data from checklists
+        // Create array of days with valid data from checklists
+        const checklistMap = new Map<number, DayHistory>();
         checklists.forEach(checklist => {
           // Convert UTC date from backend to local date
           const checklistLocalDate = utcToLocalDate(checklist.created_at);
           const checklistDateStart = getStartOfDay(checklistLocalDate);
-          
           // Skip if it's today
           if (isSameDay(checklistDateStart, today)) {
             return;
           }
-          
           // Use the score directly from the checklist
           const scoreNum = parseFloat(checklist.score);
           if (!isNaN(scoreNum)) {
-            days.push({
+            checklistMap.set(checklistDateStart.getTime(), {
               date: checklistDateStart,
               regretIndex: Math.round(scoreNum * 100), // Convert decimal score to percentage
               score: checklist.score
             });
           }
         });
-        
+
+        // Build days array for each day in the period (excluding today)
+        const days: DayHistory[] = [];
+        for (let i = selectedPeriod; i >= 1; i--) {
+          const day = getStartOfDay(getDaysAgo(i));
+          const key = day.getTime();
+          if (checklistMap.has(key)) {
+            days.push(checklistMap.get(key)!);
+          } else {
+            days.push({
+              date: day,
+              regretIndex: 100,
+              score: '1.0',
+            });
+          }
+        }
         // Sort days by date (most recent first)
         days.sort((a, b) => b.date.getTime() - a.date.getTime());
-        
-        // Take only the selected period days
-        setHistoryData(days.slice(0, selectedPeriod));
+        setHistoryData(days);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch history data');
       } finally {
