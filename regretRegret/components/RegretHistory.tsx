@@ -181,7 +181,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
       <View style={styles.chartContainer}>
         <LineChart
           data={data}
-          width={Dimensions.get("window").width - 40}
+          width={Dimensions.get("window").width}
           height={220}
           chartConfig={chartConfig}
           bezier
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   chartContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     marginBottom: 20,
     alignItems: 'center'
   },
