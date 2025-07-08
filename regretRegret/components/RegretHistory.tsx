@@ -49,7 +49,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
   const [historyData, setHistoryData] = useState<DayHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(30);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(7);
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   statLabel: {
     fontSize: 14,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    marginLeft: 12,
   },
   subtitle: {
     fontSize: 14,
