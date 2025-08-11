@@ -2,7 +2,7 @@
   "expo": {
     "name": "regretRegret",
     "slug": "regretRegret",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,6 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.regretregret.app",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": ["audio"],
@@ -25,7 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.regretRegret"
+      "package": "com.regretregret.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
