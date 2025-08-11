@@ -16,8 +16,12 @@
       "bundleIdentifier": "com.regretregret.app",
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["audio"],
-        "NSMicrophoneUsageDescription": "This app needs access to play audio for sound effects."
+        "UIBackgroundModes": [
+          "audio",
+          "audio"
+        ],
+        "NSMicrophoneUsageDescription": "This app needs access to play audio for sound effects.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -33,6 +37,11 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ad333635-608f-4536-9d75-19017bcce474"
+      }
+    }
   }
 }
