@@ -36,7 +36,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "react-native-svg"
     ],
     "extra": {
       "eas": {
