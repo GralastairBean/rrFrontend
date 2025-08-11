@@ -2,8 +2,26 @@ import { Audio } from 'expo-av';
 
 let sound: Audio.Sound | null = null;
 
+// Configure audio mode to ignore silent switch
+const configureAudioMode = async () => {
+  try {
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      staysActiveInBackground: false,
+      playsInSilentModeIOS: true, // This makes sounds play in silent mode
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+    });
+  } catch (error) {
+    console.error('Error configuring audio mode:', error);
+  }
+};
+
 export const playCheckSound = async () => {
   try {
+    // Configure audio mode first
+    await configureAudioMode();
+    
     if (sound) {
       await sound.unloadAsync();
     }
