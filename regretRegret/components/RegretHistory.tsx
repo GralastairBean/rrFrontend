@@ -36,15 +36,11 @@ const formatRegretIndex = (index: number): { text: string; color: string; style:
 };
 
 const calculateAverageIndex = (data: DayHistory[], days: number) => {
-  // Need at least one previous day (excluding today)
-  if (data.length <= 1) return -1;
+  if (data.length === 0) return -1;
   
-  // Get previous days (skip today)
-  const previousDays = data.slice(1, days + 1);
-  if (previousDays.length === 0) return -1;
-  
-  const sum = previousDays.reduce((acc, curr) => acc + curr.regretIndex, 0);
-  return Math.round(sum / previousDays.length);
+  // Use all the data we have for the selected period
+  const sum = data.reduce((acc, curr) => acc + curr.regretIndex, 0);
+  return Math.round(sum / data.length);
 };
 
 export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps) {
