@@ -7,6 +7,7 @@ import { checklistService } from '../api/services/checklistService';
 import { Checklist } from '../api/types';
 import { LineChart } from 'react-native-chart-kit';
 import HistoryPopup from './HistoryPopup';
+import GridView from './GridView';
 import { 
   utcToLocalDate, 
   getStartOfDay, 
@@ -49,6 +50,7 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(7);
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
@@ -297,6 +299,18 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
               { color: selectedPeriod === 30 ? themeColors.buttonText : themeColors.text }
             ]}>30 Days</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              { backgroundColor: themeColors.surface }
+            ]}
+            onPress={() => setShowGrid(true)}
+          >
+            <Text style={[
+              styles.periodButtonText,
+              { color: themeColors.text }
+            ]}>{new Date().getFullYear()}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.statsContainer}>
@@ -371,6 +385,11 @@ export default function RegretHistory({ currentRegretIndex }: RegretHistoryProps
           </Text>
         </View>
       )}
+      <GridView 
+        visible={showGrid} 
+        onClose={() => setShowGrid(false)}
+        historyData={historyData}
+      />
       <HistoryPopup visible={showHistoryPopup} onClose={handleHistoryPopupClose} />
     </View>
   );
