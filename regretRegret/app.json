@@ -1,27 +1,24 @@
 {
   "expo": {
-    "name": "regretRegret",
+    "name": "Regret Regret",
     "slug": "regretRegret",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash_frog1.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "bundleIdentifier": "com.regretregret.app",
-      "buildNumber": "2",
       "supportsTablet": true,
+      "bundleIdentifier": "com.regretregret.app",
+      "buildNumber": "4",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio",
-          "audio"
-        ],
-        "NSMicrophoneUsageDescription": "This app needs access to play audio for sound effects.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
