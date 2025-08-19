@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TextStyle, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, FlatList } from 'react-native';
+import { StyleSheet, Text, View, Image, TextStyle, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, FlatList, RefreshControl } from 'react-native';
 import { authService } from '../api/services/authService';
 import { networkService, NetworkUser } from '../api/services/networkService';
 import { useState, useEffect } from 'react';
@@ -57,6 +57,7 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [networkUsers, setNetworkUsers] = useState<NetworkUser[]>([]);
   const [isLoadingNetwork, setIsLoadingNetwork] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { theme } = useTheme();
   const themeColors = colors[theme];
 
@@ -71,24 +72,38 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
     loadNetworkUsers();
   }, []);
 
-  const loadNetworkUsers = async () => {
+  const loadNetworkUsers = async (isRefresh = false) => {
     try {
-      setIsLoadingNetwork(true);
+      if (isRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoadingNetwork(true);
+      }
+      
       const users = await networkService.getFollowingUsers();
       console.log('📋 Loaded network users:', users);
       console.log('📋 First user structure:', users[0]);
       
-      // Debug: Show local date comparison for each user
-      users.forEach(user => {
-        // No logging here - we'll see it in the user processing logs
-      });
+      // Add current user to the top of the list
+      const currentUser: NetworkUser = {
+        id: -1, // Use -1 to distinguish from real network users
+        username: username,
+        regret_index: currentRegretIndex,
+        date_joined: new Date().toISOString(), // This won't be used for current user
+        checklist_created_at: new Date().toISOString(), // This won't be used for current user
+      };
       
-      setNetworkUsers(users);
+      const allUsers = [currentUser, ...users];
+      setNetworkUsers(allUsers);
     } catch (error) {
       console.error('Error loading network users:', error);
       // Don't show error alert for initial load
     } finally {
-      setIsLoadingNetwork(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoadingNetwork(false);
+      }
     }
   };
 
@@ -243,6 +258,7 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
     
     const color = getRegretIndexColor(regretIndex);
     const style: TextStyle = regretIndex === -1 ? { fontWeight: 'bold' } : {};
+    const isCurrentUser = item.id === -1;
     
     return (
       <View style={[styles.networkUserItem, { borderBottomColor: themeColors.border }]}>
@@ -254,7 +270,7 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
           />
           <View style={styles.networkUserDetails}>
             <Text style={[styles.networkUsername, { color: themeColors.text }]}>
-              {item.username}
+              {isCurrentUser ? 'You' : item.username}
             </Text>
           </View>
         </View>
@@ -262,14 +278,16 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
           <Text style={[styles.networkUserRegretIndex, { color }, style]}>
             {displayText}
           </Text>
-          <TouchableOpacity
-            style={[styles.unfollowButton, { borderColor: themeColors.border }]}
-            onPress={() => handleUnfollowUser(item.id, item.username)}
-          >
-            <Text style={[styles.unfollowButtonText, { color: themeColors.textSecondary }]}>
-              Unfollow
-            </Text>
-          </TouchableOpacity>
+          {!isCurrentUser && (
+            <TouchableOpacity
+              style={[styles.unfollowButton, { borderColor: themeColors.border }]}
+              onPress={() => handleUnfollowUser(item.id, item.username)}
+            >
+              <Text style={[styles.unfollowButtonText, { color: themeColors.textSecondary }]}>
+                Unfollow
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -281,24 +299,10 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
         <Text style={[styles.title, { color: themeColors.primary }]}>Network</Text>
       </View>
 
-      <View style={[styles.userInfo, { borderBottomColor: themeColors.border }]}>
-        <View style={styles.usernameContainer}>
-          <Image 
-            source={require('../assets/user_1.png')}
-            style={[styles.userIcon, { tintColor: themeColors.primary }]}
-            resizeMode="contain"
-          />
-          <Text style={[styles.username, { color: themeColors.text }]}>{username}</Text>
-          <Text style={[styles.regretIndex, { color }, style]}>
-            {text}
-          </Text>
-        </View>
-      </View>
-
       <View style={styles.addNetworkSection}>
         <TouchableOpacity 
           style={[styles.addButton, { backgroundColor: themeColors.primary }]}
-          onPress={handleAddToNetwork}
+          onPress={() => setShowAddModal(true)}
           activeOpacity={0.7}
         >
           <Text style={styles.addButtonText}>Add to my Network</Text>
@@ -315,15 +319,20 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
         </View>
       ) : networkUsers.length > 0 ? (
         <View style={styles.networkListContainer}>
-          <Text style={[styles.networkListTitle, { color: themeColors.text }]}>
-            Your Network ({networkUsers.length})
-          </Text>
           <FlatList
             data={networkUsers}
             renderItem={renderNetworkUser}
             keyExtractor={(item) => item.id.toString()}
             style={styles.networkList}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={() => loadNetworkUsers(true)}
+                colors={[themeColors.primary]}
+                tintColor={themeColors.primary}
+              />
+            }
           />
         </View>
       ) : (
@@ -411,33 +420,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  userInfo: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  usernameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-  },
-  username: {
-    fontSize: 18,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  regretIndex: {
-    fontSize: 18,
-    marginLeft: 10,
     textAlign: 'center',
   },
   addNetworkSection: {
@@ -540,11 +522,6 @@ const styles = StyleSheet.create({
   networkListContainer: {
     paddingHorizontal: 20,
     marginBottom: 30,
-  },
-  networkListTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
   },
   networkList: {
     // No specific styles needed for FlatList, it handles its own layout
