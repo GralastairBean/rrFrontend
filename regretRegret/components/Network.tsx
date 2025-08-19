@@ -520,17 +520,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   networkListContainer: {
+    flex: 1,
     paddingHorizontal: 20,
-    marginBottom: 30,
   },
   networkList: {
-    // No specific styles needed for FlatList, it handles its own layout
+    flex: 1,
   },
   networkUserItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 10,
+    paddingBottom: 15,
     borderBottomWidth: 1,
   },
   networkUserInfo: {
