@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TextStyle, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, FlatList, RefreshControl } from 'react-native';
+import { StyleSheet, Text, View, Image, TextStyle, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, FlatList, RefreshControl, ScrollView } from 'react-native';
 import { authService } from '../api/services/authService';
 import { networkService, NetworkUser } from '../api/services/networkService';
 import { useState, useEffect } from 'react';
@@ -210,6 +210,27 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
     );
   };
 
+  const getUserRegretIndex = (user: NetworkUser): number => {
+    if (!user.checklist_created_at) return -1; // Default to SLACKER if no checklist
+    if (isChecklistFromToday(user.checklist_created_at)) {
+      if (typeof user.regret_index === 'string') {
+        const parsed = parseFloat(user.regret_index);
+        if (isNaN(parsed)) return -1;
+        return Math.round(parsed * 100);
+      } else if (typeof user.regret_index === 'number') {
+        if (user.regret_index >= 0 && user.regret_index <= 1) return Math.round(user.regret_index * 100);
+        if (user.regret_index >= 0 && user.regret_index <= 100) return user.regret_index;
+      }
+    }
+    return -1; // Default to SLACKER if not from today or invalid index
+  };
+
+  const getUserDisplayText = (user: NetworkUser): string => {
+    const regretIndex = getUserRegretIndex(user);
+    if (regretIndex === -1) return 'SLACKER';
+    return `${regretIndex}%`;
+  };
+
   const renderNetworkUser = ({ item }: { item: NetworkUser }) => {
     // First check if this checklist is from today
     let isToday = false;
@@ -299,16 +320,6 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
         <Text style={[styles.title, { color: themeColors.primary }]}>Network</Text>
       </View>
 
-      <View style={styles.addNetworkSection}>
-        <TouchableOpacity 
-          style={[styles.addButton, { backgroundColor: themeColors.primary }]}
-          onPress={() => setShowAddModal(true)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.addButtonText}>Add to my Network</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Network Users List */}
       {isLoadingNetwork ? (
         <View style={styles.loadingContainer}>
@@ -318,31 +329,75 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
           </Text>
         </View>
       ) : networkUsers.length > 0 ? (
-        <View style={styles.networkListContainer}>
-          <FlatList
-            data={networkUsers}
-            renderItem={renderNetworkUser}
-            keyExtractor={(item) => item.id.toString()}
-            style={styles.networkList}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={() => loadNetworkUsers(true)}
-                colors={[themeColors.primary]}
-                tintColor={themeColors.primary}
-              />
-            }
-          />
-        </View>
+        <ScrollView 
+          style={styles.networkListContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => loadNetworkUsers(true)}
+              colors={[themeColors.primary]}
+              tintColor={themeColors.primary}
+            />
+          }
+        >
+          {networkUsers.map((user, index) => (
+            <TouchableOpacity
+              key={user.id}
+              style={[
+                styles.networkUserButton,
+                { borderBottomColor: themeColors.border },
+                user.id === -1 && { borderTopWidth: 1, borderTopColor: themeColors.border }
+              ]}
+              onLongPress={() => {
+                if (user.id !== -1) {
+                  handleUnfollowUser(user.id, user.username);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.networkUserInfo}>
+                <Image 
+                  source={require('../assets/user_1.png')}
+                  style={[styles.networkUserIcon, { tintColor: themeColors.primary }]}
+                  resizeMode="contain"
+                />
+                <View style={styles.networkUserDetails}>
+                  <Text style={[styles.networkUsername, { color: themeColors.text }]}>
+                    {user.id === -1 ? 'You' : user.username}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.networkUserActions}>
+                <Text style={[styles.networkUserRegretIndex, { color: getRegretIndexColor(getUserRegretIndex(user)) }]}>
+                  {getUserDisplayText(user)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+          
+                      {/* Instruction */}
+            <Text style={[styles.instructionText, { color: themeColors.textSecondary }]}>
+              Long press a user to unfollow
+            </Text>
+          
+          {/* Persistent Add Button at Bottom */}
+          <TouchableOpacity
+            style={[styles.addUserButton, { backgroundColor: themeColors.primary }]}
+            onPress={() => setShowAddModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addUserButtonText}>+ Add User</Text>
+          </TouchableOpacity>
+        </ScrollView>
       ) : (
         <View style={styles.emptyState}>
-          <Text style={[styles.emptyStateText, { color: themeColors.textSecondary }]}>
-            No users in your network yet
-          </Text>
-          <Text style={[styles.emptyStateSubtext, { color: themeColors.textSecondary }]}>
-            Use the button above to add users to your network
-          </Text>
+          <TouchableOpacity
+            style={[styles.addUserButton, { backgroundColor: themeColors.primary }]}
+            onPress={() => setShowAddModal(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addUserButtonText}>+ Add User</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -396,7 +451,7 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
                 {isLoading ? (
                   <ActivityIndicator color="white" size="small" />
                 ) : (
-                  <Text style={styles.addButtonText}>Add</Text>
+                  <Text style={styles.addUserButtonText}>Add</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -421,23 +476,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  addNetworkSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    alignItems: 'center',
-  },
-  addButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    minWidth: 200,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
   emptyState: {
     flex: 1,
@@ -534,6 +572,14 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     borderBottomWidth: 1,
   },
+  networkUserButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+  },
   networkUserInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -566,5 +612,24 @@ const styles = StyleSheet.create({
   unfollowButtonText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  addUserButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 200,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  addUserButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  instructionText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 20,
   },
 }); 
