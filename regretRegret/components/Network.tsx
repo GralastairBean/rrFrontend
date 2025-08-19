@@ -91,6 +91,7 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
         regret_index: currentRegretIndex,
         date_joined: new Date().toISOString(), // This won't be used for current user
         checklist_created_at: new Date().toISOString(), // This won't be used for current user
+        allow_networking: true, // Current user always allows networking
       };
       
       const allUsers = [currentUser, ...users];
@@ -307,9 +308,15 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
           </View>
         </View>
         <View style={styles.networkUserActions}>
-          <Text style={[styles.networkUserRegretIndex, { color }, style]}>
-            {displayText}
-          </Text>
+          {item.allow_networking ? (
+            <Text style={[styles.networkUserRegretIndex, { color }, style]}>
+              {displayText}
+            </Text>
+          ) : (
+            <Text style={[styles.hiddenUserText, { color: themeColors.textSecondary }]}>
+              Hidden
+            </Text>
+          )}
           {!isCurrentUser && (
             <TouchableOpacity
               style={[styles.unfollowButton, { borderColor: themeColors.border }]}
@@ -369,19 +376,35 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
               <View style={styles.networkUserInfo}>
                 <Image 
                   source={require('../assets/user_1.png')}
-                  style={[styles.networkUserIcon, { tintColor: themeColors.primary }]}
+                  style={[
+                    styles.networkUserIcon, 
+                    { 
+                      tintColor: user.allow_networking ? themeColors.primary : themeColors.textSecondary 
+                    }
+                  ]}
                   resizeMode="contain"
                 />
                 <View style={styles.networkUserDetails}>
-                  <Text style={[styles.networkUsername, { color: themeColors.text }]}>
+                  <Text style={[
+                    styles.networkUsername, 
+                    { 
+                      color: user.allow_networking ? themeColors.text : themeColors.textSecondary 
+                    }
+                  ]}>
                     {user.id === -1 ? 'You' : user.username}
                   </Text>
                 </View>
               </View>
               <View style={styles.networkUserActions}>
-                <Text style={[styles.networkUserRegretIndex, { color: getRegretIndexColor(getUserRegretIndex(user)) }]}>
-                  {getUserDisplayText(user)}
-                </Text>
+                {user.allow_networking ? (
+                  <Text style={[styles.networkUserRegretIndex, { color: getRegretIndexColor(getUserRegretIndex(user)) }]}>
+                    {getUserDisplayText(user)}
+                  </Text>
+                ) : (
+                  <Text style={[styles.hiddenUserText, { color: themeColors.textSecondary }]}>
+                    Hidden
+                  </Text>
+                )}
               </View>
             </TouchableOpacity>
           ))}
@@ -657,5 +680,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
     marginBottom: 20,
+  },
+  hiddenUserText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlignVertical: 'center',
   },
 }); 

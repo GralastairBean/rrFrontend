@@ -7,6 +7,7 @@ export interface NetworkUser {
   followed_at?: string; // This might also be missing, using date_joined instead
   date_joined: string; // Backend provides this field
   checklist_created_at?: string; // UTC date when checklist was created
+  allow_networking: boolean; // Whether this user allows networking
 }
 
 export interface UsernameValidationResponse {
