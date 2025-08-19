@@ -16,8 +16,9 @@ import { ThemeProvider, useTheme, colors } from './utils/ThemeContext';
 
 export const getRegretIndexColor = (value: number | null) => {
   if (value === null) return '#121212';  // Default color during loading
-  if (value <= 0) return '#4CAF50';  // Green
-  if (value >= 100) return '#f44336'; // Red
+  if (value === -1) return '#f44336';   // Red for SLACKER (no checklist)
+  if (value <= 0) return '#4CAF50';     // Green for 0% (perfect success)
+  if (value >= 100) return '#f44336';   // Red for 100% (complete failure)
   
   if (value <= 25) {
     // Green to Light Green
