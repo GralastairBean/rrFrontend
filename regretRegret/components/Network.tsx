@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TextStyle, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, FlatList, RefreshControl, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Image, TextStyle, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, FlatList, RefreshControl, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { authService } from '../api/services/authService';
 import { networkService, NetworkUser } from '../api/services/networkService';
 import { useState, useEffect } from 'react';
@@ -408,7 +408,10 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
         animationType="fade"
         onRequestClose={handleCloseModal}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <View style={[styles.modalContent, { backgroundColor: themeColors.surface }]}>
             <Text style={[styles.modalTitle, { color: themeColors.text }]}>
               Add to Network
@@ -456,7 +459,7 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -498,12 +501,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 20,
   },
   modalContent: {
     width: '80%',
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
+    maxHeight: '80%',
+    justifyContent: 'space-between',
   },
   modalTitle: {
     fontSize: 24,
