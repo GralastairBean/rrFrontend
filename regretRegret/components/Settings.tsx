@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, Switch, Alert, Image } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme, colors } from '../utils/ThemeContext';
 import { getTimezoneInfo } from '../utils/datetime';
+import { networkService } from '../api/services/networkService';
 
 interface SettingsProps {
   username: string;
@@ -9,9 +10,45 @@ interface SettingsProps {
 }
 
 export default function Settings({ username, onLogout }: SettingsProps) {
-  const [sendDailyCroak, setSendDailyCroak] = useState(false);
+  const [allowNetworking, setAllowNetworking] = useState(true);
+  const [isLoadingNetworking, setIsLoadingNetworking] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const themeColors = colors[theme];
+
+  // Load current networking settings on component mount
+  useEffect(() => {
+    // Since backend doesn't support GET for networking settings,
+    // we'll start with networking enabled by default
+    // The actual status will be reflected when users try to follow you
+    setAllowNetworking(true);
+  }, []);
+
+  // Handle networking settings change
+  const handleNetworkingChange = async (value: boolean) => {
+    console.log('🔄 Toggle clicked, new value:', value);
+    console.log('🔄 Current state before change:', allowNetworking);
+    
+    setIsLoadingNetworking(true);
+    try {
+      const result = await networkService.updateNetworkingSettings(value);
+      console.log('🔄 API response:', result);
+      
+      // Check if the response contains the allow_networking field
+      if (result.allow_networking !== undefined) {
+        console.log('✅ Successfully updated networking to:', result.allow_networking);
+        setAllowNetworking(result.allow_networking);
+        // No popup needed - toggle movement provides clear feedback
+      } else {
+        console.log('❌ Backend response missing allow_networking field');
+        Alert.alert('Error', 'Invalid response from server');
+      }
+    } catch (error) {
+      console.error('❌ API call failed:', error);
+      Alert.alert('Error', 'Failed to update networking settings');
+    } finally {
+      setIsLoadingNetworking(false);
+    }
+  };
 
   // Safe timezone info getter with fallback
   const getSafeTimezoneInfo = (): string => {
@@ -78,14 +115,24 @@ export default function Settings({ username, onLogout }: SettingsProps) {
       </View>
 
       <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
-        <Text style={[styles.settingLabel, { color: themeColors.text }]}>Send Daily Croak</Text>
+        <View style={styles.settingLeft}>
+          <Text style={[styles.settingLabel, { color: themeColors.text }]}>Allow Networking</Text>
+          <Text style={[styles.settingDescription, { color: themeColors.textSecondary }]}>
+            If enabled, other users can add you to their network and your daily regret index will be visible
+          </Text>
+        </View>
         <Switch
-          value={sendDailyCroak}
-          onValueChange={setSendDailyCroak}
+          value={allowNetworking}
+          onValueChange={handleNetworkingChange}
           trackColor={{ false: themeColors.border, true: themeColors.primary }}
-          thumbColor={sendDailyCroak ? '#fff' : '#f4f3f4'}
+          thumbColor={allowNetworking ? '#fff' : '#f4f3f4'}
         />
       </View>
+      {isLoadingNetworking && (
+        <View style={styles.updatingContainer}>
+          <Text style={styles.updatingText}>Updating...</Text>
+        </View>
+      )}
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress}>
@@ -146,8 +193,17 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
   },
+  settingLeft: {
+    flex: 1,
+    marginRight: 10,
+  },
   settingLabel: {
     fontSize: 16,
+    fontWeight: '500',
+  },
+  settingDescription: {
+    fontSize: 12,
+    marginTop: 2,
   },
   timezoneValue: {
     fontSize: 14,
@@ -172,5 +228,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#888',
+    marginLeft: 10,
+  },
+  updatingContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  updatingText: {
+    fontSize: 14,
+    color: '#888',
   },
 }); 

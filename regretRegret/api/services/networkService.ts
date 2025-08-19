@@ -59,5 +59,15 @@ export const networkService = {
     const response = await api.delete<{ success: boolean; message: string }>(`/api/network/unfollow/${username}/`);
     console.log('✅ Unfollow response:', response.data);
     return response.data;
+  },
+
+  // Update networking settings
+  updateNetworkingSettings: async (allowNetworking: boolean): Promise<{ allow_networking: boolean; message: string }> => {
+    console.log('⚙️ Calling networking settings endpoint:', '/api/network/settings/');
+    const response = await api.patch<{ allow_networking: boolean; message: string }>('/api/network/settings/', {
+      allow_networking: allowNetworking
+    });
+    console.log('✅ Networking settings response:', response.data);
+    return response.data;
   }
 }; 
