@@ -357,7 +357,7 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
               style={[
                 styles.networkUserButton,
                 { borderBottomColor: themeColors.border },
-                user.id === -1 && { borderTopWidth: 1, borderTopColor: themeColors.border }
+                user.id === -1 && { borderTopWidth: 1, borderTopColor: themeColors.primary, borderBottomColor: themeColors.primary }
               ]}
               onLongPress={() => {
                 if (user.id !== -1) {
@@ -389,6 +389,11 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
                       {/* Instruction */}
             <Text style={[styles.instructionText, { color: themeColors.textSecondary }]}>
               Long press a user to unfollow
+            </Text>
+            
+            {/* Refresh Instruction */}
+            <Text style={[styles.instructionText, { color: themeColors.textSecondary }]}>
+              Pull down to refresh
             </Text>
           
           {/* Persistent Add Button at Bottom */}
@@ -600,6 +605,7 @@ const styles = StyleSheet.create({
   networkUserInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   networkUserIcon: {
     width: 30,
@@ -608,18 +614,21 @@ const styles = StyleSheet.create({
   },
   networkUserDetails: {
     marginLeft: 10,
+    justifyContent: 'center',
   },
   networkUsername: {
     fontSize: 16,
     fontWeight: '500',
+    textAlignVertical: 'center',
   },
   networkUserActions: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   networkUserRegretIndex: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
+    textAlignVertical: 'center',
   },
   unfollowButton: {
     paddingVertical: 5,
