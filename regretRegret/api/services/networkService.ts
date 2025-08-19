@@ -16,9 +16,9 @@ export interface UsernameValidationResponse {
 }
 
 export interface FollowUserResponse {
-  success: boolean;
+  following: string;
   message: string;
-  network_user: NetworkUser;
+  network_id: number;
 }
 
 export interface NetworkListResponse {

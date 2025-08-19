@@ -158,15 +158,25 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
       const followResult = await networkService.followUser(newUsername);
       
       console.log('👥 Follow result:', followResult);
+      console.log('👥 Follow result type:', typeof followResult);
+      console.log('👥 Follow result keys:', Object.keys(followResult));
+      console.log('👥 Follow result.network_id:', followResult.network_id);
+      console.log('👥 Follow result.message:', followResult.message);
       
-      if (followResult.success) {
-        Alert.alert('Success', `Added ${newUsername} to your network!`);
-        handleCloseModal();
-        
+      // Close modal immediately regardless of result
+      setShowAddModal(false);
+      setNewUsername('');
+      setIsLoading(false);
+      
+      // Check if the follow was successful by looking for network_id or success message
+      if (followResult.network_id || followResult.message?.toLowerCase().includes('successfully')) {
         console.log('🔄 Reloading network users after successful follow...');
         // Reload network users to show the new addition
         await loadNetworkUsers();
         console.log('✅ Network users reloaded');
+        
+        // Show success message after refresh
+        Alert.alert('Success', `Added ${newUsername} to your network!`);
       } else {
         Alert.alert('Error', followResult.message || 'Failed to add user to network');
       }
@@ -181,7 +191,8 @@ export default function Network({ currentRegretIndex }: NetworkProps) {
       } else {
         Alert.alert('Error', 'Failed to add user to network. Please try again.');
       }
-    } finally {
+      
+      // Reset loading state on error
       setIsLoading(false);
     }
   };
