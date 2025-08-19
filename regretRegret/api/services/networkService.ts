@@ -69,5 +69,13 @@ export const networkService = {
     });
     console.log('✅ Networking settings response:', response.data);
     return response.data;
+  },
+
+  // Get current networking settings
+  getNetworkingSettings: async (): Promise<{ allow_networking: boolean; message: string }> => {
+    console.log('⚙️ Getting current networking settings');
+    const response = await api.get<{ allow_networking: boolean; message: string }>('/api/network/settings/');
+    console.log('✅ Current networking settings:', response.data);
+    return response.data;
   }
 }; 

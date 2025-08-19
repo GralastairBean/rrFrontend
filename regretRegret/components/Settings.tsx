@@ -12,15 +12,28 @@ interface SettingsProps {
 export default function Settings({ username, onLogout }: SettingsProps) {
   const [allowNetworking, setAllowNetworking] = useState(true);
   const [isLoadingNetworking, setIsLoadingNetworking] = useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const { theme, toggleTheme } = useTheme();
   const themeColors = colors[theme];
 
   // Load current networking settings on component mount
   useEffect(() => {
-    // Since backend doesn't support GET for networking settings,
-    // we'll start with networking enabled by default
-    // The actual status will be reflected when users try to follow you
-    setAllowNetworking(true);
+    const loadNetworkingSettings = async () => {
+      try {
+        setIsLoadingSettings(true);
+        const settings = await networkService.getNetworkingSettings();
+        console.log('📋 Loaded networking settings from backend:', settings);
+        setAllowNetworking(settings.allow_networking);
+      } catch (error) {
+        console.error('❌ Failed to load networking settings:', error);
+        // Default to enabled if we can't load settings
+        setAllowNetworking(true);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+    
+    loadNetworkingSettings();
   }, []);
 
   // Handle networking settings change
